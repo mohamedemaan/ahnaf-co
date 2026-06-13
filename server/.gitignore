@@ -1,2 +1,4 @@
-node_modules
-.env
+echo ".env" >> .gitignore
+echo ".env.keys" >> .gitignore
+echo ".env.local" >> .gitignore
+echo ".env.production" >> .gitignore
