@@ -8,7 +8,7 @@ import Admin from "./pages/Admin";
 import AdminAuth from "./pages/AdminAuth";
 import AdminProtected from "./components/AdminProtected";
 import ProductDetails from "./pages/ProductDetails";
-import Cart from "./pages/Cart";
+import Cart from "./pages/cart";
 import Orders from "./pages/Orders";
 import MyOrders from "./pages/MyOrders";
 import Chatbot from "./components/Chatbot";
