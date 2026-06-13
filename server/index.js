@@ -1,25 +1,48 @@
+require("dotenv").config();
+process.env.JWT_SECRET = process.env.JWT_SECRET || "emaan123secretkey";
+
 const express = require("express");
-const connectDB = require("./config/db");
 const cors = require("cors");
-const orderRoutes = require("./routes/order");
+const connectDB = require("./config/db");
 
 const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/product");
 const cartRoutes = require("./routes/cart");
+const orderRoutes = require("./routes/order");
+const userRoutes = require("./routes/userRoutes");
+const aiRoutes = require("./routes/ai");
 
 const app = express();
 
-connectDB();
+// ── CORS FIRST ──
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
+
+// ── Middleware ──
 app.use(express.json());
-app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 
+// ── DB ──
+connectDB();
+
+// ── Routes ──
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/ai", aiRoutes);
 
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+// ── Test Route ──
+app.get("/", (req, res) => {
+  res.json({ message: "Ahnaf Enterprises API Running! 🚀" });
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

@@ -6,10 +6,16 @@ const storage = new CloudinaryStorage({
   cloudinary,
   params: {
     folder: "products",
-    allowed_formats: ["jpg", "png", "jpeg"],
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    console.log("MULTER FILE FILTER HIT:", file.fieldname);
+    cb(null, true);
+  }
+});
 
 module.exports = upload;
