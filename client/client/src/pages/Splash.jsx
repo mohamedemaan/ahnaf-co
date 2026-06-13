@@ -2,19 +2,31 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
+const STEPS = [
+  "Initializing AI Systems...",
+  "Loading Product Engine...",
+  "Connecting Database...",
+  "Starting Recommendation AI...",
+  "Welcome to Ahnaf Enterprises!",
+];
+
 function Splash() {
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [done, setDone] = useState(false);
 
-  const steps = [
-    "Initializing AI Systems...",
-    "Loading Product Engine...",
-    "Connecting Database...",
-    "Starting Recommendation AI...",
-    "Welcome to Ahnaf Enterprises!",
-  ];
+  // Precompute particle properties once (avoids calling Math.random during render)
+  const [particles] = useState(() =>
+    [...Array(20)].map((_, i) => ({
+      size: Math.random() * 4 + 2,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      duration: 2 + Math.random() * 3,
+      delay: Math.random() * 2,
+      color: i % 2 === 0 ? "#58A6FF" : "#00FFB3",
+    }))
+  );
 
   useEffect(() => {
     // Progress bar
@@ -29,7 +41,7 @@ function Splash() {
     }, 30);
 
     // Steps
-    const stepTimers = steps.map((_, i) =>
+    const stepTimers = STEPS.map((_, i) =>
       setTimeout(() => setCurrentStep(i), i * 600)
     );
 
@@ -44,7 +56,7 @@ function Splash() {
       stepTimers.forEach(clearTimeout);
       clearTimeout(navTimer);
     };
-  }, []);
+  }, [navigate]);
 
   return (
     <AnimatePresence>
@@ -89,16 +101,16 @@ function Splash() {
           ))}
 
           {/* ── Floating Particles ── */}
-          {[...Array(20)].map((_, i) => (
+          {particles.map((p, i) => (
             <motion.div
               key={i}
               className="absolute rounded-full"
               style={{
-                width: Math.random() * 4 + 2,
-                height: Math.random() * 4 + 2,
-                background: i % 2 === 0 ? "#58A6FF" : "#00FFB3",
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
+                width: p.size,
+                height: p.size,
+                background: p.color,
+                left: `${p.left}%`,
+                top: `${p.top}%`,
                 opacity: 0.3,
               }}
               animate={{
@@ -106,9 +118,9 @@ function Splash() {
                 opacity: [0.3, 0.8, 0.3],
               }}
               transition={{
-                duration: 2 + Math.random() * 3,
+                duration: p.duration,
                 repeat: Infinity,
-                delay: Math.random() * 2,
+                delay: p.delay,
               }}
             />
           ))}
@@ -195,7 +207,7 @@ function Splash() {
                   fontFamily: "JetBrains Mono",
                 }}
               >
-                {currentStep === 4 ? "✓" : "▶"} {steps[currentStep]}
+                {currentStep === 4 ? "✓" : "▶"} {STEPS[currentStep]}
               </motion.p>
             </AnimatePresence>
           </motion.div>
