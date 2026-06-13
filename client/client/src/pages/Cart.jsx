@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useToast } from '../components/Toast'; // 👈 top la
 
 function Cart() {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-   const showToast = (message) => alert(message); // ✅ ADD THIS
+  const showToast = (message) => alert(message);
 
   const getCart = async () => {
     try {
@@ -23,22 +22,41 @@ function Cart() {
       setLoading(false);
     }
   };
- 
-  useEffect(() => { getCart(); }, []);
 
- const removeFromCart = async (id) => {
-  try {
-    const token = localStorage.getItem("token");
-    await axios.delete(`http://localhost:5000/api/cart/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    showToast('Item removed!', 'info'); // ✅ ADD THIS
-    getCart();
-  } catch (err) {
-    showToast('Failed to remove!', 'error'); // ✅ ADD THIS
-    console.log("Remove Error:", err);
-  }
-};
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:5000/api/cart", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (active) setCartItems(res.data);
+      } catch (err) {
+        console.log("Cart Error:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    load();
+    return () => { active = false; };
+  }, []);
+
+  const removeFromCart = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:5000/api/cart/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      showToast('Item removed!', 'info');
+      getCart();
+    } catch (err) {
+      showToast('Failed to remove!', 'error');
+      console.log("Remove Error:", err);
+    }
+  };
 
   const totalPrice = cartItems.reduce((acc, item) => {
     return acc + (item.product?.price || 0) * item.quantity;

@@ -6,9 +6,6 @@ const jwt         = require("jsonwebtoken");
 const Admin       = require("../models/Admin");
 const transporter = require("../config/mailer");
 
-// Temporary OTP store
-const otpStore = {};
-
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -20,12 +17,28 @@ router.post("/send-otp", async (req, res) => {
     if (!email) return res.status(400).json({ message: "Email required" });
 
     const otp = generateOtp();
-    otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
+    const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+
+    // Try to attach OTP to an existing admin record (login flow)
+    const existing = await Admin.findOne({ email });
+    if (existing) {
+      existing.otp = otp;
+      existing.otpExpires = otpExpires;
+      await existing.save();
+    } else {
+      // Register flow — temporarily store OTP in a pending collection-less doc
+      // We use a lightweight approach: store in a separate PendingOtp model
+      await PendingOtp.findOneAndUpdate(
+        { email },
+        { email, otp, otpExpires },
+        { upsert: true, new: true }
+      );
+    }
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: "Admin Login OTP - EmmanStore",
+      subject: "Admin OTP - EmmanStore",
       html: `
         <h2>EmmanStore Admin Verification</h2>
         <p>Your OTP is:</p>
@@ -50,9 +63,11 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const stored = otpStore[email];
+    const stored = await PendingOtp.findOne({ email });
     if (!stored) return res.status(400).json({ message: "OTP not sent" });
-    if (Date.now() > stored.expiresAt) return res.status(400).json({ message: "OTP expired" });
+    if (Date.now() > new Date(stored.otpExpires).getTime()) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
     if (stored.otp !== otp) return res.status(400).json({ message: "Invalid OTP" });
 
     const exists = await Admin.findOne({ $or: [{ email }, { username }] });
@@ -67,7 +82,7 @@ router.post("/register", async (req, res) => {
       password: hashedPassword,
     });
 
-    delete otpStore[email];
+    await PendingOtp.deleteOne({ email });
 
     res.status(201).json({
       message: "Admin registered successfully",
@@ -98,12 +113,15 @@ router.post("/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid password" });
 
-    const stored = otpStore[email];
-    if (!stored) return res.status(400).json({ message: "OTP not sent" });
-    if (Date.now() > stored.expiresAt) return res.status(400).json({ message: "OTP expired" });
-    if (stored.otp !== otp) return res.status(400).json({ message: "Invalid OTP" });
+    if (!admin.otp) return res.status(400).json({ message: "OTP not sent" });
+    if (Date.now() > new Date(admin.otpExpires).getTime()) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
+    if (admin.otp !== otp) return res.status(400).json({ message: "Invalid OTP" });
 
-    delete otpStore[email];
+    admin.otp = undefined;
+    admin.otpExpires = undefined;
+    await admin.save();
 
     const token = jwt.sign(
       { id: admin._id, username: admin.username, role: "admin" },
@@ -124,3 +142,12 @@ router.post("/login", async (req, res) => {
 });
 
 module.exports = router;
+
+// ── PendingOtp model (inline for simplicity) ────────────────────────────────
+const mongoose = require("mongoose");
+const pendingOtpSchema = new mongoose.Schema({
+  email:      { type: String, required: true, unique: true },
+  otp:        String,
+  otpExpires: Date,
+});
+const PendingOtp = mongoose.models.PendingOtp || mongoose.model("PendingOtp", pendingOtpSchema);
