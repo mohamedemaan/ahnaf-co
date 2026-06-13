@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
+const API = import.meta.env.VITE_API_URL;
+
 function Login() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -25,7 +27,7 @@ function Login() {
     }
     try {
       setLoading(true);
-      await axios.post("http://localhost:5000/api/auth/send-otp", {
+      await axios.post(`${API}/api/auth/send-otp`, {
         email: formData.email,
       });
       setOtpSent(true);
@@ -41,10 +43,7 @@ function Login() {
     e.preventDefault();
     try {
       setLoading(true);
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        formData
-      );
+      const res = await axios.post(`${API}/api/auth/login`, formData);
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       alert("Login successful! 🎉");
