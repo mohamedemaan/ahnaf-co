@@ -1,8 +1,8 @@
 {
-  "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "jsonwebtoken": "^9.0.3",
-    "multer-storage-cloudinary": "^4.0.0",
-    "react-router-dom": "^7.17.0"
+  "name": "ahnaf-enterprises",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server/index.js",
+    "build": "npm install --prefix server"
   }
 }
