@@ -2,9 +2,12 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
+
+const API = import.meta.env.VITE_API_URL;
+
 function Register() {
   const navigate = useNavigate();
-  const showToast = (message) => alert(message);// ✅ ADD THIS
+  const showToast = (message) => alert(message);
   const [formData, setFormData] = useState({
     name: "", phone: "", email: "", password: "", otp: "",
   });
@@ -20,7 +23,7 @@ function Register() {
     if (!formData.email) { alert("Email enter pannu!"); return; }
     try {
       setLoading(true);
-      await axios.post("http://localhost:5000/api/auth/send-otp", {
+      await axios.post(`${API}/api/auth/send-otp`, {
         email: formData.email,
       });
       setOtpSent(true);
@@ -33,24 +36,24 @@ function Register() {
   };
 
   const registerUser = async (e) => {
-  e.preventDefault();
-  try {
-    setLoading(true);
-    await axios.post("http://localhost:5000/api/auth/register", formData);
-    showToast('Account created! 🎉', 'success'); // ✅ replace alert
-    navigate("/login");
-  } catch (err) {
-    showToast(err.response?.data?.message || 'Register failed!', 'error'); // ✅ replace alert
-  } finally {
-    setLoading(false);
-  }
-};
+    e.preventDefault();
+    try {
+      setLoading(true);
+      await axios.post(`${API}/api/auth/register`, formData);
+      showToast('Account created! 🎉', 'success');
+      navigate("/login");
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Register failed!', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fields = [
     { name: "name", label: "FULL NAME", placeholder: "Mohamed Ahnaf", type: "text" },
     { name: "phone", label: "PHONE NUMBER", placeholder: "+91 9876543210", type: "tel" },
   ];
-   
+
   return (
     <div className="min-h-screen particle-bg flex items-center justify-center px-4 py-10 relative overflow-hidden">
 
