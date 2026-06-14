@@ -1,246 +1,182 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-function AdminAuth() {
+const API = import.meta.env.VITE_API_URL;
+
+export default function AdminAuth() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    otp: "",
-  });
-  const [otpSent, setOtpSent] = useState(false);
+  const [mode, setMode] = useState('login');
   const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    fullName: '', username: '', email: '', password: '',
+  });
 
-  const adminEmails = [
-    "mohamedemaan.a@gmail.com",
-    "emmann.2006@gmail.com",
-  ];
+  const update = (key, value) => setForm(p => ({ ...p, [key]: value }));
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const sendOtp = async () => {
-    if (!formData.email) {
-      alert("Email enter pannu!");
-      return;
+  const handleRegister = async () => {
+    if (!form.fullName || !form.username || !form.email || !form.password) {
+      alert('All fields required!'); return;
     }
+    setLoading(true);
     try {
-      setLoading(true);
-      await axios.post("http://localhost:5000/api/auth/send-otp", {
-        email: formData.email,
-      });
-      setOtpSent(true);
-      alert("OTP sent! 📧");
-    } catch {
-      alert("OTP failed ❌");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loginAdmin = async (e) => {
-    e.preventDefault();
-    try {
-      setLoading(true);
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        formData
-      );
-      const user = res.data.user;
-
-      if (!adminEmails.includes(user.email)) {
-        alert("Admin access denied! ❌");
-        return;
-      }
-
-      localStorage.setItem("adminToken", res.data.token);
-      localStorage.setItem("adminUser", JSON.stringify(user));
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      alert("Admin Login Success! ✅");
-      navigate("/admin");
-
+      await axios.post(`${API}/api/admin-auth/register`, form);
+      alert('Admin registered! Please login. 🎉');
+      setMode('login');
+      setForm({ fullName: '', username: '', email: '', password: '' });
     } catch (err) {
-      alert(err.response?.data?.message || "Login failed ❌");
+      alert(err.response?.data?.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLogin = async () => {
+    if (!form.username || !form.password) {
+      alert('Username & Password required!'); return;
+    }
+    setLoading(true);
+    try {
+      const { data } = await axios.post(`${API}/api/admin-auth/login`, {
+        username: form.username,
+        password: form.password,
+      });
+      localStorage.setItem('adminToken', data.token);
+      localStorage.setItem('adminUser', JSON.stringify(data.admin));
+      localStorage.setItem('adminLoginTime', data.loginTime);
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.admin));
+      alert(`Welcome back, ${data.admin.fullName}! 👋`);
+      navigate('/admin');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inputStyle = {
+    width: '100%', padding: '12px 16px', borderRadius: '10px',
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(48,54,61,0.8)',
+    color: '#fff', fontSize: '14px', outline: 'none',
+    boxSizing: 'border-box', marginBottom: '14px',
+  };
+
+  const labelStyle = {
+    color: '#8B949E', fontSize: '11px', fontWeight: '700',
+    letterSpacing: '1px', display: 'block', marginBottom: '6px',
+  };
+
+  const btnPrimary = {
+    width: '100%', padding: '14px', borderRadius: '12px',
+    border: 'none', cursor: 'pointer',
+    background: 'linear-gradient(135deg, #58A6FF, #00FFB3)',
+    color: '#000', fontWeight: '800', fontSize: '14px', marginTop: '6px',
   };
 
   return (
-    <div className="min-h-screen particle-bg flex items-center justify-center px-4">
-
-      {/* Grid */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(88,166,255,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(88,166,255,0.03) 1px, transparent 1px)
-          `,
-          backgroundSize: "50px 50px",
-        }}
-      />
-
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', background: '#0D1117', padding: '20px',
+    }}>
       <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, type: "spring" }}
-        className="glass w-full max-w-md p-8 relative z-10"
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        style={{
+          width: '100%', maxWidth: '420px', borderRadius: '24px',
+          background: '#161B22', border: '1px solid rgba(88,166,255,0.2)',
+          padding: '36px', boxShadow: '0 40px 80px rgba(0,0,0,0.4)',
+        }}
       >
-
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-            className="text-5xl mb-3 inline-block"
-          >
-            ⚙️
-          </motion.div>
-          <h1
-            className="text-2xl font-black tracking-widest gradient-text"
-            style={{ fontFamily: "JetBrains Mono" }}
-          >
-            ADMIN PANEL
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+          <div style={{ fontSize: '40px', marginBottom: '8px' }}>🛍️</div>
+          <h1 style={{ color: '#58A6FF', fontWeight: '900', fontSize: '18px',
+            letterSpacing: '2px', fontFamily: 'JetBrains Mono' }}>
+            EMMANSTORE
           </h1>
-          <p className="text-sm mt-1" style={{ color: "#8B949E" }}>
-            Ahnaf Enterprises
+          <p style={{ color: '#555', fontSize: '13px', marginTop: '4px' }}>
+            Admin Panel — {mode === 'login' ? 'Login' : 'Register'}
           </p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={loginAdmin}>
+        {/* Mode Switch */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px',
+          background: 'rgba(255,255,255,0.03)', borderRadius: '12px', padding: '4px' }}>
+          {['login', 'register'].map(m => (
+            <button key={m} onClick={() => setMode(m)}
+              style={{
+                flex: 1, padding: '10px', borderRadius: '10px', border: 'none',
+                cursor: 'pointer', fontWeight: '700', fontSize: '13px',
+                background: mode === m
+                  ? 'linear-gradient(135deg, #58A6FF, #00FFB3)'
+                  : 'transparent',
+                color: mode === m ? '#000' : '#8B949E',
+              }}>
+              {m === 'login' ? '🔑 Login' : '📝 Register'}
+            </button>
+          ))}
+        </div>
 
-          {/* Email + OTP */}
-          <div className="mb-4">
-            <label
-              className="text-xs font-bold mb-2 block tracking-widest"
-              style={{ color: "#8B949E", fontFamily: "JetBrains Mono" }}
-            >
-              ADMIN EMAIL
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                name="email"
-                placeholder="admin@email.com"
-                onChange={handleChange}
-                className="dark-input flex-1"
-                required
-              />
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={sendOtp}
-                disabled={loading || otpSent}
-                className="px-4 py-3 rounded-xl text-xs font-bold whitespace-nowrap"
-                style={{
-                  background: otpSent
-                    ? "rgba(0,255,179,0.1)"
-                    : "rgba(88,166,255,0.1)",
-                  border: `1px solid ${otpSent ? "#00FFB3" : "#58A6FF"}`,
-                  color: otpSent ? "#00FFB3" : "#58A6FF",
-                }}
-              >
-                {otpSent ? "✓ Sent" : "Send OTP"}
-              </motion.button>
-            </div>
-          </div>
+        {/* Register Form */}
+        {mode === 'register' && (
+          <>
+            <label style={labelStyle}>FULL NAME</label>
+            <input style={inputStyle} value={form.fullName}
+              onChange={e => update('fullName', e.target.value)}
+              placeholder="John Doe" />
 
-          {/* Password */}
-          <div className="mb-4">
-            <label
-              className="text-xs font-bold mb-2 block tracking-widest"
-              style={{ color: "#8B949E", fontFamily: "JetBrains Mono" }}
-            >
-              PASSWORD
-            </label>
-            <input
-              type="password"
-              name="password"
-              placeholder="••••••••"
-              onChange={handleChange}
-              className="dark-input"
-              required
-            />
-          </div>
+            <label style={labelStyle}>USERNAME</label>
+            <input style={inputStyle} value={form.username}
+              onChange={e => update('username', e.target.value)}
+              placeholder="admin123" />
 
-          {/* OTP */}
-          {otpSent && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="mb-4"
-            >
-              <label
-                className="text-xs font-bold mb-2 block tracking-widest"
-                style={{ color: "#00FFB3", fontFamily: "JetBrains Mono" }}
-              >
-                ✦ ENTER OTP
-              </label>
-              <input
-                type="text"
-                name="otp"
-                placeholder="_ _ _ _ _ _"
-                onChange={handleChange}
-                maxLength={6}
-                className="dark-input text-center text-2xl tracking-[0.5em] font-bold"
-                style={{
-                  borderColor: "#00FFB3",
-                  boxShadow: "0 0 15px rgba(0,255,179,0.2)",
-                  color: "#00FFB3",
-                }}
-                required
-              />
-            </motion.div>
-          )}
+            <label style={labelStyle}>EMAIL</label>
+            <input style={inputStyle} type="email" value={form.email}
+              onChange={e => update('email', e.target.value)}
+              placeholder="admin@emmanstore.com" />
 
-          {/* Submit */}
-          <motion.button
-            type="submit"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            disabled={loading || !otpSent}
-            className="cyber-btn w-full py-4 text-base font-bold rounded-xl mt-2"
-            style={{ opacity: !otpSent ? 0.5 : 1 }}
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <motion.span
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                >
-                  ⟳
-                </motion.span>
-                Authenticating...
-              </span>
-            ) : (
-              "Admin Login →"
-            )}
-          </motion.button>
+            <label style={labelStyle}>PASSWORD</label>
+            <input style={inputStyle} type="password" value={form.password}
+              onChange={e => update('password', e.target.value)}
+              placeholder="••••••••" />
 
-        </form>
+            <motion.button whileHover={{ scale: 1.02 }}
+              disabled={loading} onClick={handleRegister} style={btnPrimary}>
+              {loading ? '⏳ Registering...' : '✅ Register'}
+            </motion.button>
+          </>
+        )}
 
-        {/* Back */}
-        <div className="text-center mt-6">
-          <button
-            onClick={() => navigate("/")}
-            className="text-xs"
-            style={{ color: "#8B949E" }}
-          >
+        {/* Login Form */}
+        {mode === 'login' && (
+          <>
+            <label style={labelStyle}>USERNAME</label>
+            <input style={inputStyle} value={form.username}
+              onChange={e => update('username', e.target.value)}
+              placeholder="admin123" />
+
+            <label style={labelStyle}>PASSWORD</label>
+            <input style={inputStyle} type="password" value={form.password}
+              onChange={e => update('password', e.target.value)}
+              placeholder="••••••••" />
+
+            <motion.button whileHover={{ scale: 1.02 }}
+              disabled={loading} onClick={handleLogin} style={btnPrimary}>
+              {loading ? '⏳ Logging in...' : '🔑 Login'}
+            </motion.button>
+          </>
+        )}
+
+        <div style={{ textAlign: 'center', marginTop: '16px' }}>
+          <button onClick={() => navigate('/')}
+            style={{ background: 'none', border: 'none',
+              color: '#8B949E', fontSize: '12px', cursor: 'pointer' }}>
             ← Back to Store
           </button>
         </div>
-
       </motion.div>
     </div>
   );
 }
-
-export default AdminAuth;
