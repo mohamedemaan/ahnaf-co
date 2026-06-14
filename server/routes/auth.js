@@ -12,6 +12,12 @@ function generateOtp() {
 }
 
 // ✅ SEND OTP
+router.get("/test", (req,res)=>{
+  res.json({
+    success:true,
+    message:"Auth route working"
+  });
+});
 router.post("/send-otp", async (req, res) => {
   try {
     const { email } = req.body;

@@ -4,5 +4,8 @@
   "scripts": {
     "start": "node server/index.js",
     "build": "npm install --prefix server"
+  },
+  "dependencies": {
+    "mongodb": "^7.3.0"
   }
 }

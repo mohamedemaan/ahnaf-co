@@ -6,7 +6,25 @@ const cors       = require("cors");
 const app = express();
 
 // ── Middleware ────────────────────────────────────────────────────────────────
-app.use(cors());
+app.get("/", (req, res) => {
+  res.send("Backend Running Successfully 🚀");
+});
+
+app.get("/api/test", (req, res) => {
+  res.json({ success: true });
+});
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://ahnaf-enterprises.vercel.app"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+  })
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
