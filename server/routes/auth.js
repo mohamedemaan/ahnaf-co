@@ -29,10 +29,10 @@ router.post("/send-otp", async (req, res) => {
     // Store OTP in DB — works on serverless since it persists in MongoDB
     // upsert: create a temp record if user doesn't exist yet (for register flow)
     await User.findOneAndUpdate(
-      { email },
-      { email, otp, otpExpires },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
+  { email },
+  { email, otp, otpExpires },
+  { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
+);
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
