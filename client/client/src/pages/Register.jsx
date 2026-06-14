@@ -28,9 +28,9 @@ function Register() {
       });
       setOtpSent(true);
       alert("OTP sent! 📧");
-    } catch {
-      alert("OTP failed ❌");
-    } finally {
+    } catch (err) {
+     alert("OTP failed: " + (err.response?.data?.error || err.response?.data?.message || err.message));
+     }finally {
       setLoading(false);
     }
   };

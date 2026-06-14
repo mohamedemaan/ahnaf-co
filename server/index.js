@@ -14,33 +14,15 @@ const aiRoutes = require("./routes/ai");
 
 const app = express();
 
-// ── CORS FIRST ──
-app.get("/", (req, res) => {
-  res.json({
-    message: "Ahnaf Enterprises API Running! 🚀",
-  });
-});
-
-app.get("/api/test", (req, res) => {
-  res.json({
-    success: true,
-    message: "Backend Working",
-  });
-});
-
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://ahnaf-enterprises.vercel.app"
-    ],
-    credentials: true,
-  })
-);
-
-// ── Middleware ──
+app.use(cors({
+  origin: ["http://localhost:5173", "https://ahnaf-enterprises.vercel.app"],
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.get("/", (req, res) => res.json({ message: "API Running 🚀" }));
+app.use("/api/auth", authRoutes);
 
 // ── DB ──
 connectDB();
