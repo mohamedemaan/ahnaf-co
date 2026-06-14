@@ -10,33 +10,12 @@ function Login() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    otp: "",
   });
-  const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const sendOtp = async () => {
-    if (!formData.email) {
-      alert("Email enter pannu!");
-      return;
-    }
-    try {
-      setLoading(true);
-      await axios.post(`${API}/api/auth/send-otp`, {
-        email: formData.email,
-      });
-      setOtpSent(true);
-      alert("OTP sent! 📧");
-    } catch {
-      alert("OTP failed ❌");
-    } finally {
-      setLoading(false);
-    }
   };
 
   const loginUser = async (e) => {
@@ -126,7 +105,7 @@ function Login() {
         {/* Form */}
         <form onSubmit={loginUser}>
 
-          {/* Email + OTP */}
+          {/* Email */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -139,38 +118,19 @@ function Login() {
             >
               EMAIL ADDRESS
             </label>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                name="email"
-                placeholder="your@email.com"
-                onChange={handleChange}
-                onFocus={() => setFocused("email")}
-                onBlur={() => setFocused("")}
-                className="dark-input flex-1"
-                style={{
-                  borderColor: focused === "email" ? "#58A6FF" : "#30363D",
-                }}
-                required
-              />
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={sendOtp}
-                disabled={loading || otpSent}
-                className="px-4 py-3 rounded-xl text-xs font-bold whitespace-nowrap"
-                style={{
-                  background: otpSent
-                    ? "rgba(0,255,179,0.1)"
-                    : "rgba(88,166,255,0.1)",
-                  border: `1px solid ${otpSent ? "#00FFB3" : "#58A6FF"}`,
-                  color: otpSent ? "#00FFB3" : "#58A6FF",
-                }}
-              >
-                {otpSent ? "✓ Sent" : "Send OTP"}
-              </motion.button>
-            </div>
+            <input
+              type="email"
+              name="email"
+              placeholder="your@email.com"
+              onChange={handleChange}
+              onFocus={() => setFocused("email")}
+              onBlur={() => setFocused("")}
+              className="dark-input w-full"
+              style={{
+                borderColor: focused === "email" ? "#58A6FF" : "#30363D",
+              }}
+              required
+            />
           </motion.div>
 
           {/* Password */}
@@ -178,7 +138,7 @@ function Login() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            className="mb-4"
+            className="mb-6"
           >
             <label
               className="text-xs font-semibold mb-2 block"
@@ -193,7 +153,7 @@ function Login() {
               onChange={handleChange}
               onFocus={() => setFocused("password")}
               onBlur={() => setFocused("")}
-              className="dark-input"
+              className="dark-input w-full"
               style={{
                 borderColor: focused === "password" ? "#58A6FF" : "#30363D",
               }}
@@ -201,47 +161,16 @@ function Login() {
             />
           </motion.div>
 
-          {/* OTP Input */}
-          {otpSent && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="mb-4"
-            >
-              <label
-                className="text-xs font-semibold mb-2 block"
-                style={{ color: "#00FFB3", fontFamily: "JetBrains Mono" }}
-              >
-                ✦ ENTER OTP
-              </label>
-              <input
-                type="text"
-                name="otp"
-                placeholder="_ _ _ _ _ _"
-                onChange={handleChange}
-                maxLength={6}
-                className="dark-input text-center text-2xl tracking-[0.5em] font-bold"
-                style={{
-                  borderColor: "#00FFB3",
-                  boxShadow: "0 0 15px rgba(0,255,179,0.2)",
-                  color: "#00FFB3",
-                }}
-                required
-              />
-            </motion.div>
-          )}
-
           {/* Submit */}
           <motion.button
             type="submit"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            disabled={loading || !otpSent}
+            disabled={loading}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
             className="cyber-btn w-full py-4 text-base font-bold rounded-xl mt-2"
-            style={{ opacity: !otpSent ? 0.5 : 1 }}
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
