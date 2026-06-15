@@ -14,8 +14,7 @@ function generateOtp() {
 router.post("/send-otp", async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ message: "Email required" });
-
+if (!email) return res.status(400).json({ message: "All fields are required" });
     const otp = generateOtp();
     const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
 
