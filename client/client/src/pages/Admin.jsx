@@ -9,9 +9,7 @@ import {
 } from 'recharts';
 
 const API = import.meta.env.VITE_API_URL;
-
 const COLORS = ['#58A6FF', '#00FFB3', '#BC8CFF', '#FFA657', '#F85149'];
-
 const statusColors = {
   pending:    '#FFA657',
   processing: '#58A6FF',
@@ -20,7 +18,25 @@ const statusColors = {
   cancelled:  '#F85149',
 };
 
-// ── Stat Card ──
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload?.length) {
+    return (
+      <div style={{
+        background: '#1C2128', border: '1px solid #30363D',
+        borderRadius: '10px', padding: '10px 14px'
+      }}>
+        <p style={{ color: '#8B949E', fontSize: '12px', marginBottom: '6px' }}>{label}</p>
+        {payload.map((p, idx) => (
+          <p key={idx} style={{ color: p.color, fontSize: '13px', fontWeight: '700' }}>
+            {p.name}: {p.name === 'revenue' ? `₹${p.value}` : p.value}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 const StatCard = ({ icon, label, value, growth, color, delay }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
@@ -45,10 +61,8 @@ const StatCard = ({ icon, label, value, growth, color, delay }) => (
     <p style={{ color: '#fff', fontSize: '28px', fontWeight: '900',
       fontFamily: 'JetBrains Mono', marginBottom: '6px' }}>{value}</p>
     {growth && (
-      <span style={{
-        fontSize: '12px', fontWeight: '700',
-        color: growth > 0 ? '#00FFB3' : '#F85149'
-      }}>
+      <span style={{ fontSize: '12px', fontWeight: '700',
+        color: growth > 0 ? '#00FFB3' : '#F85149' }}>
         {growth > 0 ? '↑' : '↓'} {Math.abs(growth)}% this week
       </span>
     )}
@@ -60,39 +74,36 @@ const StatCard = ({ icon, label, value, growth, color, delay }) => (
 );
 
 export default function Admin() {
-  const navigate       = useNavigate();
-  const showToast = (msg) => {
-  alert(msg);
-};
-  const fileInputRef   = useRef(null);
-  const [tab, setTab]  = useState('dashboard');
-  const [products, setProducts]     = useState([]);
-  const [orders,   setOrders]       = useState([]);
-  const [customers, setCustomers]   = useState([]);
-  const [feedbacks, setFeedbacks]   = useState([]);
-  const [messages,  setMessages]    = useState([]);
-  const [, setLoading] = useState(false); 
-  const [showForm,  setShowForm]    = useState(false);
-  const [editItem,  setEditItem]    = useState(null);
-  const [aiLoading, setAiLoading]   = useState(false);
-  const [csvLoading, setCsvLoading] = useState(false);
+  const navigate     = useNavigate();
+  const fileInputRef = useRef(null);
+  const [tab, setTab] = useState('dashboard');
+
+  const [products,  setProducts]  = useState([]);
+  const [orders,    setOrders]    = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [messages,  setMessages]  = useState([]);
+
+  const [showForm,  setShowForm]  = useState(false);
+  const [editItem,  setEditItem]  = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [csvLoading,setCsvLoading]= useState(false);
   const [orderSearch, setOrderSearch] = useState('');
   const [orderFilter, setOrderFilter] = useState('all');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [replyMsg, setReplyMsg]     = useState('');
+  const [replyMsg,  setReplyMsg]  = useState('');
 
   const [stats, setStats] = useState({
     products: 0, orders: 0, revenue: '₹0', customers: 0
   });
-
   const [chartData, setChartData] = useState([]);
   const [stateData] = useState([
-  { name: 'Tamil Nadu',  value: 35 },
-  { name: 'Maharashtra', value: 25 },
-  { name: 'Karnataka',   value: 20 },
-  { name: 'Delhi',       value: 12 },
-  { name: 'Others',      value: 8  },
- ]);
+    { name: 'Tamil Nadu',  value: 35 },
+    { name: 'Maharashtra', value: 25 },
+    { name: 'Karnataka',   value: 20 },
+    { name: 'Delhi',       value: 12 },
+    { name: 'Others',      value: 8  },
+  ]);
 
   const [form, setForm] = useState({
     title: '', category: '', price: '',
@@ -100,28 +111,88 @@ export default function Admin() {
     images: '', colors: '', sizes: '',
   });
 
-const fetchAll = async () => {
-  setLoading(true);
+  const inputStyle = {
+    width: '100%', padding: '10px 14px', borderRadius: '10px',
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(48,54,61,0.8)',
+    color: '#fff', fontSize: '13px', outline: 'none',
+    boxSizing: 'border-box',
+  };
 
-  try {
-    // YOUR ORIGINAL API CALLS HERE
-  } catch (err) {
-    console.error('Fetch error:', err);
-    alert('Failed to load data!');
-  } finally {
-    setLoading(false);
-  }
-};
+  const tabs = [
+    { id: 'dashboard', icon: '📊', label: 'Overview'      },
+    { id: 'products',  icon: '📦', label: 'Products'      },
+    { id: 'orders',    icon: '🛒', label: 'Orders'        },
+    { id: 'customers', icon: '👥', label: 'Customers'     },
+    { id: 'care',      icon: '💬', label: 'Customer Care' },
+    { id: 'settings',  icon: '⚙️', label: 'Settings'      },
+  ];
 
-useEffect(() => {
-  fetchAll();
-}, []);
+  const fetchAll = async () => {
+    try {
+      const token   = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
 
+      const [pRes, oRes] = await Promise.all([
+        axios.get(`${API}/api/products`, { headers }),
+        axios.get(`${API}/api/orders`, { headers }).catch(() => ({ data: [] })),
+      ]);
 
-  // ── AI Description ──
+      const productList = Array.isArray(pRes.data) ? pRes.data : [];
+      const orderList   = Array.isArray(oRes.data) ? oRes.data : [];
+
+      setProducts(productList);
+      setOrders(orderList);
+
+      const uniqueUsers = [...new Map(
+        orderList.map(o => [o.userId?._id || o.userId, o.userId])
+      ).values()].filter(Boolean);
+      setCustomers(uniqueUsers);
+
+      const revenue = orderList.reduce((a, o) => a + (o.totalAmount || 0), 0);
+      setStats({
+        products:  productList.length,
+        orders:    orderList.length,
+        revenue:   `₹${revenue.toLocaleString()}`,
+        customers: uniqueUsers.length,
+      });
+
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const now = new Date();
+      const cd  = Array(6).fill(0).map((_, i) => {
+        const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
+        const monthOrders = orderList.filter(o => {
+          const od = new Date(o.createdAt);
+          return od.getMonth() === d.getMonth() && od.getFullYear() === d.getFullYear();
+        });
+        return {
+          month:   months[d.getMonth()],
+          revenue: monthOrders.reduce((a, o) => a + (o.totalAmount || 0), 0),
+          orders:  monthOrders.length,
+        };
+      });
+      setChartData(cd);
+
+      try {
+        const fRes = await axios.get(`${API}/api/reviews/all`, { headers });
+        setFeedbacks(Array.isArray(fRes.data) ? fRes.data : fRes.data.reviews || []);
+      } catch {
+        setFeedbacks([]);
+      }
+
+    } catch (err) {
+      console.error('Fetch error:', err);
+      alert('Failed to load data!');
+    }
+  };
+
+  useEffect(() => {
+    fetchAll();
+  }, []); // eslint-disable-line
+
   const generateDescription = async () => {
     if (!form.title || !form.category) {
-      showToast('Enter title & category first!', 'warning'); return;
+      alert('Enter title & category first!'); return;
     }
     setAiLoading(true);
     try {
@@ -129,21 +200,20 @@ useEffect(() => {
         title: form.title, category: form.category,
       });
       setForm(prev => ({ ...prev, description: data.description }));
-      showToast('AI description generated! 🤖', 'success');
-    } catch (err) {
-      showToast(err.response?.data?.error || 'AI failed! Is Ollama running?', 'error');
+      alert('AI description generated! 🤖');
+    } catch {
+      alert('AI failed!');
     } finally {
       setAiLoading(false);
     }
   };
 
-  // ── Product CRUD ──
   const handleSubmit = async () => {
     if (!form.title || !form.price || !form.category) {
-      showToast('Title, Category & Price required!', 'warning'); return;
+      alert('Title, Category & Price required!'); return;
     }
     try {
-      const token = localStorage.getItem('token');
+      const token   = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       const payload = {
         ...form,
@@ -156,14 +226,14 @@ useEffect(() => {
       };
       if (editItem) {
         await axios.put(`${API}/api/products/${editItem._id}`, payload, { headers });
-        showToast('Product updated! ✅', 'success');
+        alert('Product updated! ✅');
       } else {
         await axios.post(`${API}/api/products`, payload, { headers });
-        showToast('Product added! 🎉', 'success');
+        alert('Product added! 🎉');
       }
       setShowForm(false); setEditItem(null); resetForm(); fetchAll();
-    } catch (err) {
-      showToast(err.response?.data?.error || 'Failed to save!', 'error');
+    } catch {
+      alert('Failed to save!');
     }
   };
 
@@ -174,11 +244,12 @@ useEffect(() => {
       await axios.delete(`${API}/api/products/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      showToast('Deleted!', 'info'); fetchAll();
-    } catch { showToast('Failed!', 'error'); }
+      alert('Deleted!'); fetchAll();
+    } catch {
+      alert('Failed!');
+    }
   };
 
-  // ── CSV Import ──
   const handleCSV = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -187,7 +258,7 @@ useEffect(() => {
       const text    = await file.text();
       const lines   = text.split('\n').filter(Boolean);
       const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-      const products = lines.slice(1).map(line => {
+      const prods   = lines.slice(1).map(line => {
         const vals = line.match(/(".*?"|[^,]+)/g) || [];
         const obj  = {};
         headers.forEach((h, i) => {
@@ -206,22 +277,21 @@ useEffect(() => {
         };
       }).filter(p => p.title);
 
-      const token = localStorage.getItem('token');
+      const token    = localStorage.getItem('token');
       const { data } = await axios.post(`${API}/api/products/bulk`,
-        { products },
+        { products: prods },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      showToast(`${data.count} products imported! 🎉`, 'success');
+      alert(`${data.count} products imported! 🎉`);
       fetchAll();
-    } catch (err) {
-      showToast('CSV import failed!', 'error');
+    } catch {
+      alert('CSV import failed!');
     } finally {
       setCsvLoading(false);
       e.target.value = '';
     }
   };
 
-  // ── Order Actions ──
   const updateOrderStatus = async (id, status) => {
     try {
       const token = localStorage.getItem('token');
@@ -229,19 +299,24 @@ useEffect(() => {
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      showToast(`Order ${status}!`, 'success'); fetchAll();
-    } catch { showToast('Failed!', 'error'); }
+      alert(`Order ${status}!`); fetchAll();
+    } catch {
+      alert('Failed!');
+    }
   };
 
   const openEdit = (p) => {
     setEditItem(p);
     setForm({
-      title: p.title||'', category: p.category||'', price: p.price||'',
-      originalPrice: p.originalPrice||'', stock: p.stock||'',
-      description: p.description||'',
-      images: (p.images||[]).join(', '),
-      colors: (p.colors||[]).join(', '),
-      sizes:  (p.sizes||[]).join(', '),
+      title:         p.title         || '',
+      category:      p.category      || '',
+      price:         p.price         || '',
+      originalPrice: p.originalPrice || '',
+      stock:         p.stock         || '',
+      description:   p.description   || '',
+      images: (p.images || []).join(', '),
+      colors: (p.colors || []).join(', '),
+      sizes:  (p.sizes  || []).join(', '),
     });
     setShowForm(true);
   };
@@ -251,7 +326,6 @@ useEffect(() => {
     stock:'', description:'', images:'', colors:'', sizes:'',
   });
 
-  // ── Customer Care ──
   const sendReply = () => {
     if (!replyMsg.trim() || !selectedCustomer) return;
     const newMsg = {
@@ -260,10 +334,9 @@ useEffect(() => {
     };
     setMessages(prev => [...prev, newMsg]);
     setReplyMsg('');
-    showToast('Reply sent! 📧', 'success');
+    alert('Reply sent! 📧');
   };
 
-  // ── Filtered Orders ──
   const filteredOrders = orders.filter(o => {
     const matchSearch = !orderSearch ||
       o._id?.includes(orderSearch) ||
@@ -272,51 +345,14 @@ useEffect(() => {
     return matchSearch && matchFilter;
   });
 
-  // ── Trending Products ──
   const trendingProducts = [...products]
     .sort((a, b) => (b.price || 0) - (a.price || 0))
     .slice(0, 5);
 
-  const inputStyle = {
-    width: '100%', padding: '10px 14px', borderRadius: '10px',
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(48,54,61,0.8)',
-    color: '#fff', fontSize: '13px', outline: 'none',
-    boxSizing: 'border-box',
-  };
-
-  const tabs = [
-    { id: 'dashboard',  icon: '📊', label: 'Overview'      },
-    { id: 'products',   icon: '📦', label: 'Products'      },
-    { id: 'orders',     icon: '🛒', label: 'Orders'        },
-    { id: 'customers',  icon: '👥', label: 'Customers'     },
-    { id: 'care',       icon: '💬', label: 'Customer Care' },
-    { id: 'settings',   icon: '⚙️', label: 'Settings'      },
-  ];
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload?.length) {
-      return (
-        <div style={{
-          background: '#1C2128', border: '1px solid #30363D',
-          borderRadius: '10px', padding: '10px 14px'
-        }}>
-          <p style={{ color: '#8B949E', fontSize: '12px', marginBottom: '6px' }}>{label}</p>
-          {payload.map((p, i) => (
-            <p key={i} style={{ color: p.color, fontSize: '13px', fontWeight: '700' }}>
-              {p.name}: {p.name === 'revenue' ? `₹${p.value}` : p.value}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <div style={{ minHeight: '100vh', background: '#0D1117', display: 'flex' }}>
 
-      {/* ── Sidebar ── */}
+      {/* Sidebar */}
       <motion.aside
         initial={{ x: -80, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
@@ -330,19 +366,15 @@ useEffect(() => {
           overflowY: 'auto',
         }}
       >
-        {/* Logo */}
         <div style={{ marginBottom: '32px', padding: '0 8px' }}>
           <div style={{ fontSize: '24px', marginBottom: '4px' }}>🛍️</div>
           <p style={{ color: '#58A6FF', fontWeight: '900', fontSize: '13px',
             letterSpacing: '2px', fontFamily: 'JetBrains Mono' }}>
             EMMANSTORE
           </p>
-          <p style={{ color: '#555', fontSize: '11px', marginTop: '2px' }}>
-            Admin Panel
-          </p>
+          <p style={{ color: '#555', fontSize: '11px', marginTop: '2px' }}>Admin Panel</p>
         </div>
 
-        {/* Nav Items */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
           {tabs.map(t => (
             <motion.button key={t.id} whileHover={{ x: 4 }} whileTap={{ scale: 0.97 }}
@@ -354,7 +386,7 @@ useEffect(() => {
                 background: tab === t.id
                   ? 'linear-gradient(135deg,rgba(88,166,255,0.15),rgba(0,255,179,0.08))'
                   : 'transparent',
-                color:  tab === t.id ? '#fff' : '#8B949E',
+                color:      tab === t.id ? '#fff' : '#8B949E',
                 fontWeight: tab === t.id ? '700' : '500',
                 fontSize: '13px',
                 borderLeft: `2px solid ${tab === t.id ? '#58A6FF' : 'transparent'}`,
@@ -362,11 +394,9 @@ useEffect(() => {
             >
               <span>{t.icon}</span>{t.label}
             </motion.button>
-             
           ))}
         </div>
 
-        {/* Welcome */}
         <div style={{
           padding: '12px', borderRadius: '12px', marginBottom: '12px',
           background: 'rgba(88,166,255,0.05)', border: '1px solid rgba(88,166,255,0.1)'
@@ -377,41 +407,43 @@ useEffect(() => {
           </p>
         </div>
 
-        <motion.button whileHover={{ x: 4 }} onClick={() => {
-  localStorage.removeItem('adminToken');
-  localStorage.removeItem('adminUser');
-  localStorage.removeItem('adminLoginTime');
-  navigate('/admin-login');
-}}
-  style={{
-    padding: '11px 16px', borderRadius: '12px', marginTop: '8px',
-    border: '1px solid rgba(248,81,73,0.3)', cursor: 'pointer',
-    background: 'rgba(248,81,73,0.05)', color: '#F85149',
-    fontSize: '13px', textAlign: 'left',
-    display: 'flex', alignItems: 'center', gap: '8px',
-  }}
->
-  🚪 Logout
-</motion.button>
+        <motion.button whileHover={{ x: 4 }}
+          onClick={() => {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            localStorage.removeItem('adminLoginTime');
+            navigate('/admin-login');
+          }}
+          style={{
+            padding: '11px 16px', borderRadius: '12px', marginTop: '8px',
+            border: '1px solid rgba(248,81,73,0.3)', cursor: 'pointer',
+            background: 'rgba(248,81,73,0.05)', color: '#F85149',
+            fontSize: '13px', textAlign: 'left',
+            display: 'flex', alignItems: 'center', gap: '8px',
+          }}
+        >
+          🚪 Logout
+        </motion.button>
       </motion.aside>
 
-      {/* ── Main ── */}
+      {/* Main */}
       <div style={{ flex: 1, padding: '28px', overflowY: 'auto', maxHeight: '100vh' }}>
 
         {/* Top Bar */}
-        <div style={{
-          display: 'flex', justifyContent: 'space-between',
-          alignItems: 'center', marginBottom: '28px'
-        }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between',
+          alignItems: 'center', marginBottom: '28px' }}>
           <div>
             <h1 style={{ color: '#fff', fontSize: '24px', fontWeight: '900' }}>
               Welcome, {JSON.parse(localStorage.getItem('user')||'{}')?.name?.split(' ')[0] || 'Admin'} 👋
             </h1>
             <p style={{ color: '#555', fontSize: '13px' }}>
-              {new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}
+              {new Date().toLocaleDateString('en-IN', {
+                weekday:'long', year:'numeric', month:'long', day:'numeric'
+              })}
             </p>
           </div>
-          <motion.button whileHover={{ scale: 1.05 }} onClick={fetchAll}
+          {/* ✅ Fix — nested button இல்ல */}
+          <motion.button whileHover={{ scale: 1.05 }} onClick={() => fetchAll()}
             style={{
               padding: '10px 20px', borderRadius: '12px',
               background: 'rgba(88,166,255,0.1)',
@@ -423,46 +455,32 @@ useEffect(() => {
           </motion.button>
         </div>
 
-        {/* ══ DASHBOARD ══ */}
+        {/* DASHBOARD */}
         {tab === 'dashboard' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-
-            {/* Stats */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
               gap: '16px', marginBottom: '24px'
             }}>
-              <StatCard icon="💰" label="Total Revenue"   value={stats.revenue}   growth={18}  color="#00FFB3" delay={0}   />
-              <StatCard icon="👥" label="Total Customers" value={stats.customers} growth={12}  color="#58A6FF" delay={0.1} />
-              <StatCard icon="🛒" label="Total Orders"    value={stats.orders}    growth={8}   color="#BC8CFF" delay={0.2} />
-              <StatCard icon="📦" label="Total Products"  value={stats.products}  growth={5}   color="#FFA657" delay={0.3} />
+              <StatCard icon="💰" label="Total Revenue"   value={stats.revenue}   growth={18} color="#00FFB3" delay={0}   />
+              <StatCard icon="👥" label="Total Customers" value={stats.customers} growth={12} color="#58A6FF" delay={0.1} />
+              <StatCard icon="🛒" label="Total Orders"    value={stats.orders}    growth={8}  color="#BC8CFF" delay={0.2} />
+              <StatCard icon="📦" label="Total Products"  value={stats.products}  growth={5}  color="#FFA657" delay={0.3} />
             </div>
 
-            {/* Charts Row */}
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginBottom: '24px' }}>
-
-              {/* Line Chart */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-                style={{
-                  padding: '24px', borderRadius: '20px',
-                  background: '#161B22', border: '1px solid #30363D'
-                }}
+                style={{ padding: '24px', borderRadius: '20px', background: '#161B22', border: '1px solid #30363D' }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between',
-                  alignItems: 'center', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <div>
-                    <h3 style={{ color: '#fff', fontWeight: '700', fontSize: '16px' }}>
-                      📈 Revenue & Orders Growth
-                    </h3>
+                    <h3 style={{ color: '#fff', fontWeight: '700', fontSize: '16px' }}>📈 Revenue & Orders Growth</h3>
                     <p style={{ color: '#555', fontSize: '12px' }}>Last 6 months</p>
                   </div>
                   <div style={{ display: 'flex', gap: '16px' }}>
-                    {[
-                      { dot: '#58A6FF', label: 'Revenue' },
-                      { dot: '#00FFB3', label: 'Orders'  },
-                    ].map(l => (
+                    {[{ dot: '#58A6FF', label: 'Revenue' }, { dot: '#00FFB3', label: 'Orders' }].map(l => (
                       <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: l.dot }} />
                         <span style={{ color: '#8B949E', fontSize: '12px' }}>{l.label}</span>
@@ -484,20 +502,12 @@ useEffect(() => {
                 </ResponsiveContainer>
               </motion.div>
 
-              {/* Top States Donut */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-                style={{
-                  padding: '24px', borderRadius: '20px',
-                  background: '#161B22', border: '1px solid #30363D'
-                }}
+                style={{ padding: '24px', borderRadius: '20px', background: '#161B22', border: '1px solid #30363D' }}
               >
-                <h3 style={{ color: '#fff', fontWeight: '700', fontSize: '16px', marginBottom: '4px' }}>
-                  🗺️ Top States
-                </h3>
-                <p style={{ color: '#555', fontSize: '12px', marginBottom: '16px' }}>
-                  {stats.customers} Total Customers
-                </p>
+                <h3 style={{ color: '#fff', fontWeight: '700', fontSize: '16px', marginBottom: '4px' }}>🗺️ Top States</h3>
+                <p style={{ color: '#555', fontSize: '12px', marginBottom: '16px' }}>{stats.customers} Total Customers</p>
                 <ResponsiveContainer width="100%" height={160}>
                   <PieChart>
                     <Pie data={stateData} cx="50%" cy="50%" innerRadius={45}
@@ -506,56 +516,36 @@ useEffect(() => {
                         <Cell key={i} fill={COLORS[i % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip
-                      contentStyle={{ background: '#1C2128', border: '1px solid #30363D',
-                        borderRadius: '8px', color: '#fff', fontSize: '12px' }}
-                    />
+                    <Tooltip contentStyle={{ background: '#1C2128', border: '1px solid #30363D',
+                      borderRadius: '8px', color: '#fff', fontSize: '12px' }} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {stateData.map((s, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between',
-                      alignItems: 'center' }}>
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%',
-                          background: COLORS[i % COLORS.length] }} />
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: COLORS[i % COLORS.length] }} />
                         <span style={{ color: '#8B949E', fontSize: '12px' }}>{s.name}</span>
                       </div>
-                      <span style={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}>
-                        {s.value}%
-                      </span>
+                      <span style={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}>{s.value}%</span>
                     </div>
                   ))}
                 </div>
               </motion.div>
             </div>
 
-            {/* Bottom Row */}
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
-
-              {/* Recent Orders */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-                style={{
-                  borderRadius: '20px', background: '#161B22',
-                  border: '1px solid #30363D', overflow: 'hidden'
-                }}
+                style={{ borderRadius: '20px', background: '#161B22', border: '1px solid #30363D', overflow: 'hidden' }}
               >
-                <div style={{
-                  padding: '18px 24px', borderBottom: '1px solid #30363D',
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                }}>
-                  <h3 style={{ color: '#fff', fontWeight: '700', fontSize: '15px' }}>
-                    🕐 Last Orders
-                  </h3>
-                  <motion.button whileHover={{ scale: 1.05 }}
-                    onClick={() => setTab('orders')}
-                    style={{
-                      padding: '5px 12px', borderRadius: '8px', cursor: 'pointer',
+                <div style={{ padding: '18px 24px', borderBottom: '1px solid #30363D',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ color: '#fff', fontWeight: '700', fontSize: '15px' }}>🕐 Last Orders</h3>
+                  <motion.button whileHover={{ scale: 1.05 }} onClick={() => setTab('orders')}
+                    style={{ padding: '5px 12px', borderRadius: '8px', cursor: 'pointer',
                       background: 'rgba(88,166,255,0.1)', border: '1px solid rgba(88,166,255,0.2)',
-                      color: '#58A6FF', fontSize: '12px', fontWeight: '600'
-                    }}
-                  >
+                      color: '#58A6FF', fontSize: '12px', fontWeight: '600' }}>
                     See all →
                   </motion.button>
                 </div>
@@ -573,40 +563,31 @@ useEffect(() => {
                   <tbody>
                     {orders.slice(0,5).map((o, i) => (
                       <tr key={o._id} style={{ borderBottom: '1px solid rgba(48,54,61,0.3)' }}>
-                        <td style={{ padding: '12px 16px', color: '#58A6FF',
-                          fontSize: '12px', fontFamily: 'JetBrains Mono' }}>
+                        <td style={{ padding: '12px 16px', color: '#58A6FF', fontSize: '12px', fontFamily: 'JetBrains Mono' }}>
                           #{o._id?.slice(-4).toUpperCase()}
                         </td>
                         <td style={{ padding: '12px 16px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{
-                              width: '28px', height: '28px', borderRadius: '50%',
+                            <div style={{ width: '28px', height: '28px', borderRadius: '50%',
                               background: `linear-gradient(135deg, ${COLORS[i%5]}, ${COLORS[(i+1)%5]})`,
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              color: '#000', fontSize: '11px', fontWeight: '700'
-                            }}>
+                              color: '#000', fontSize: '11px', fontWeight: '700' }}>
                               {(o.userId?.name?.[0] || 'U').toUpperCase()}
                             </div>
-                            <span style={{ color: '#fff', fontSize: '13px' }}>
-                              {o.userId?.name || 'Customer'}
-                            </span>
+                            <span style={{ color: '#fff', fontSize: '13px' }}>{o.userId?.name || 'Customer'}</span>
                           </div>
                         </td>
                         <td style={{ padding: '12px 16px', color: '#555', fontSize: '12px' }}>
                           {new Date(o.createdAt).toLocaleDateString()}
                         </td>
                         <td style={{ padding: '12px 16px' }}>
-                          <span style={{
-                            padding: '3px 10px', borderRadius: '20px', fontSize: '11px',
-                            fontWeight: '700',
+                          <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700',
                             color: statusColors[o.status] || '#8B949E',
-                            background: `${statusColors[o.status]}15`,
-                          }}>
+                            background: `${statusColors[o.status]}15` }}>
                             {o.status || 'pending'}
                           </span>
                         </td>
-                        <td style={{ padding: '12px 16px', color: '#00FFB3',
-                          fontWeight: '700', fontSize: '13px' }}>
+                        <td style={{ padding: '12px 16px', color: '#00FFB3', fontWeight: '700', fontSize: '13px' }}>
                           ₹{o.totalAmount}
                         </td>
                       </tr>
@@ -615,64 +596,34 @@ useEffect(() => {
                 </table>
               </motion.div>
 
-              {/* Trending Products */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-                style={{
-                  padding: '20px', borderRadius: '20px',
-                  background: '#161B22', border: '1px solid #30363D'
-                }}
+                style={{ padding: '20px', borderRadius: '20px', background: '#161B22', border: '1px solid #30363D' }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between',
-                  alignItems: 'center', marginBottom: '16px' }}>
-                  <div>
-                    <h3 style={{ color: '#fff', fontWeight: '700', fontSize: '15px' }}>
-                      🔥 Trending Products
-                    </h3>
-                    <p style={{ color: '#555', fontSize: '11px' }}>
-                      Total {products.length} Products
-                    </p>
-                  </div>
-                </div>
+                <h3 style={{ color: '#fff', fontWeight: '700', fontSize: '15px', marginBottom: '4px' }}>🔥 Trending</h3>
+                <p style={{ color: '#555', fontSize: '11px', marginBottom: '16px' }}>Total {products.length} Products</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {trendingProducts.map((p, i) => (
-                    <div key={p._id} style={{
-                      display: 'flex', alignItems: 'center', gap: '10px'
-                    }}>
-                      <img
-                        src={p.images?.[0] || 'https://via.placeholder.com/40'}
-                        alt={p.title}
+                  {trendingProducts.map((p) => (
+                    <div key={p._id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <img src={p.images?.[0] || 'https://via.placeholder.com/40'} alt={p.title}
                         style={{ width: '40px', height: '40px', borderRadius: '10px',
-                          objectFit: 'cover', border: '1px solid #30363D' }}
-                      />
+                          objectFit: 'cover', border: '1px solid #30363D' }} />
                       <div style={{ flex: 1, overflow: 'hidden' }}>
                         <p style={{ color: '#fff', fontSize: '12px', fontWeight: '600',
-                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {p.title}
-                        </p>
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</p>
                         <div style={{ display: 'flex', gap: '4px' }}>
                           {[1,2,3,4,5].map(s => (
                             <span key={s} style={{ color: '#FFA657', fontSize: '10px' }}>★</span>
                           ))}
-                          <span style={{ color: '#555', fontSize: '10px' }}>(4.5)</span>
                         </div>
                       </div>
-                      <span style={{ color: '#00FFB3', fontWeight: '700', fontSize: '13px' }}>
-                        ₹{p.price}
-                      </span>
+                      <span style={{ color: '#00FFB3', fontWeight: '700', fontSize: '13px' }}>₹{p.price}</span>
                     </div>
                   ))}
-                  <motion.button whileHover={{ scale: 1.02 }}
-                    onClick={() => setTab('products')}
-                    style={{
-                      marginTop: '8px', padding: '8px',
-                      borderRadius: '10px', border: 'none',
-                      background: 'transparent',
-                      color: '#FFA657', fontSize: '12px',
-                      fontWeight: '600', cursor: 'pointer',
-                      textAlign: 'center'
-                    }}
-                  >
+                  <motion.button whileHover={{ scale: 1.02 }} onClick={() => setTab('products')}
+                    style={{ marginTop: '8px', padding: '8px', borderRadius: '10px', border: 'none',
+                      background: 'transparent', color: '#FFA657', fontSize: '12px',
+                      fontWeight: '600', cursor: 'pointer', textAlign: 'center' }}>
                     See all →
                   </motion.button>
                 </div>
@@ -681,72 +632,48 @@ useEffect(() => {
           </motion.div>
         )}
 
-        {/* ══ PRODUCTS ══ */}
+        {/* PRODUCTS */}
         {tab === 'products' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
               <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                 onClick={() => { resetForm(); setEditItem(null); setShowForm(true); }}
-                style={{
-                  padding: '11px 22px', borderRadius: '12px', border: 'none',
+                style={{ padding: '11px 22px', borderRadius: '12px', border: 'none',
                   background: 'linear-gradient(135deg, #58A6FF, #00FFB3)',
-                  color: '#000', fontWeight: '800', fontSize: '13px', cursor: 'pointer',
-                }}
-              >
+                  color: '#000', fontWeight: '800', fontSize: '13px', cursor: 'pointer' }}>
                 + Add Product
               </motion.button>
-
-              {/* CSV Import */}
-              <input ref={fileInputRef} type="file" accept=".csv"
-                onChange={handleCSV} style={{ display: 'none' }} />
+              <input ref={fileInputRef} type="file" accept=".csv" onChange={handleCSV} style={{ display: 'none' }} />
               <motion.button whileHover={{ scale: 1.05 }}
-                onClick={() => fileInputRef.current?.click()}
-                disabled={csvLoading}
-                style={{
-                  padding: '11px 22px', borderRadius: '12px', cursor: 'pointer',
-                  background: 'rgba(0,255,179,0.1)',
-                  border: '1px solid rgba(0,255,179,0.3)',
-                  color: '#00FFB3', fontWeight: '700', fontSize: '13px',
-                }}
-              >
+                onClick={() => fileInputRef.current?.click()} disabled={csvLoading}
+                style={{ padding: '11px 22px', borderRadius: '12px', cursor: 'pointer',
+                  background: 'rgba(0,255,179,0.1)', border: '1px solid rgba(0,255,179,0.3)',
+                  color: '#00FFB3', fontWeight: '700', fontSize: '13px' }}>
                 {csvLoading ? '⏳ Importing...' : '📁 CSV Import'}
               </motion.button>
-
-              <div style={{
-                padding: '11px 16px', borderRadius: '12px',
-                background: 'rgba(255,166,87,0.1)',
-                border: '1px solid rgba(255,166,87,0.3)',
-                color: '#FFA657', fontSize: '12px',
-              }}>
+              <div style={{ padding: '11px 16px', borderRadius: '12px',
+                background: 'rgba(255,166,87,0.1)', border: '1px solid rgba(255,166,87,0.3)',
+                color: '#FFA657', fontSize: '12px' }}>
                 📦 {products.length} Total Products
               </div>
             </div>
 
-            {/* CSV Format hint */}
-            <div style={{
-              padding: '12px 16px', borderRadius: '10px', marginBottom: '16px',
-              background: 'rgba(88,166,255,0.05)',
-              border: '1px solid rgba(88,166,255,0.1)',
-              color: '#8B949E', fontSize: '12px',
-            }}>
+            <div style={{ padding: '12px 16px', borderRadius: '10px', marginBottom: '16px',
+              background: 'rgba(88,166,255,0.05)', border: '1px solid rgba(88,166,255,0.1)',
+              color: '#8B949E', fontSize: '12px' }}>
               💡 CSV Format: <code style={{ color: '#58A6FF' }}>
                 title, category, price, originalPrice, stock, description, images, colors, sizes
-              </code> — images use <code style={{ color: '#58A6FF' }}>|</code> separator
+              </code>
             </div>
 
-            <div style={{
-              borderRadius: '20px', background: '#161B22',
-              border: '1px solid #30363D', overflow: 'hidden'
-            }}>
+            <div style={{ borderRadius: '20px', background: '#161B22', border: '1px solid #30363D', overflow: 'hidden' }}>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid #30363D' }}>
                       {['Image','Title','Category','Price','Stock','Actions'].map(h => (
                         <th key={h} style={{ padding: '14px 20px', textAlign: 'left',
-                          color: '#555', fontSize: '11px', fontWeight: '700', letterSpacing: '1px' }}>
-                          {h}
-                        </th>
+                          color: '#555', fontSize: '11px', fontWeight: '700', letterSpacing: '1px' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -755,54 +682,41 @@ useEffect(() => {
                       <motion.tr key={p._id}
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                         transition={{ delay: i * 0.02 }}
-                        style={{ borderBottom: '1px solid rgba(48,54,61,0.4)' }}
-                      >
+                        style={{ borderBottom: '1px solid rgba(48,54,61,0.4)' }}>
                         <td style={{ padding: '12px 20px' }}>
-                          <img src={p.images?.[0] || 'https://via.placeholder.com/48'}
-                            alt={p.title}
+                          <img src={p.images?.[0] || 'https://via.placeholder.com/48'} alt={p.title}
                             style={{ width: '44px', height: '44px', borderRadius: '10px',
                               objectFit: 'cover', border: '1px solid #30363D' }} />
                         </td>
-                        <td style={{ padding: '12px 20px', color: '#fff',
-                          fontSize: '13px', fontWeight: '600', maxWidth: '200px' }}>
-                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {p.title}
-                          </div>
+                        <td style={{ padding: '12px 20px', color: '#fff', fontSize: '13px',
+                          fontWeight: '600', maxWidth: '200px' }}>
+                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</div>
                         </td>
                         <td style={{ padding: '12px 20px' }}>
                           <span style={{ padding: '4px 10px', borderRadius: '20px',
-                            background: 'rgba(88,166,255,0.1)',
-                            color: '#58A6FF', fontSize: '11px', fontWeight: '700' }}>
-                            {p.category}
-                          </span>
+                            background: 'rgba(88,166,255,0.1)', color: '#58A6FF',
+                            fontSize: '11px', fontWeight: '700' }}>{p.category}</span>
                         </td>
-                        <td style={{ padding: '12px 20px', color: '#00FFB3',
-                          fontWeight: '700', fontSize: '14px' }}>
+                        <td style={{ padding: '12px 20px', color: '#00FFB3', fontWeight: '700', fontSize: '14px' }}>
                           ₹{p.price}
                         </td>
                         <td style={{ padding: '12px 20px' }}>
-                          <span style={{
-                            color: p.stock > 10 ? '#00FFB3' : p.stock > 0 ? '#FFA657' : '#F85149',
-                            fontWeight: '700', fontSize: '13px'
-                          }}>
+                          <span style={{ color: p.stock > 10 ? '#00FFB3' : p.stock > 0 ? '#FFA657' : '#F85149',
+                            fontWeight: '700', fontSize: '13px' }}>
                             {p.stock > 0 ? p.stock : 'Out'}
                           </span>
                         </td>
                         <td style={{ padding: '12px 20px' }}>
                           <div style={{ display: 'flex', gap: '8px' }}>
-                            <motion.button whileHover={{ scale: 1.05 }}
-                              onClick={() => openEdit(p)}
+                            <motion.button whileHover={{ scale: 1.05 }} onClick={() => openEdit(p)}
                               style={{ padding: '6px 14px', borderRadius: '8px', cursor: 'pointer',
-                                background: 'rgba(88,166,255,0.1)',
-                                border: '1px solid rgba(88,166,255,0.3)',
+                                background: 'rgba(88,166,255,0.1)', border: '1px solid rgba(88,166,255,0.3)',
                                 color: '#58A6FF', fontSize: '12px', fontWeight: '600' }}>
                               ✏️ Edit
                             </motion.button>
-                            <motion.button whileHover={{ scale: 1.05 }}
-                              onClick={() => deleteProduct(p._id)}
+                            <motion.button whileHover={{ scale: 1.05 }} onClick={() => deleteProduct(p._id)}
                               style={{ padding: '6px 12px', borderRadius: '8px', cursor: 'pointer',
-                                background: 'rgba(248,81,73,0.1)',
-                                border: '1px solid rgba(248,81,73,0.3)',
+                                background: 'rgba(248,81,73,0.1)', border: '1px solid rgba(248,81,73,0.3)',
                                 color: '#F85149', fontSize: '12px' }}>
                               🗑️
                             </motion.button>
@@ -817,17 +731,13 @@ useEffect(() => {
           </motion.div>
         )}
 
-        {/* ══ ORDERS ══ */}
+        {/* ORDERS */}
         {tab === 'orders' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            {/* Search + Filter */}
             <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-              <input
-                value={orderSearch}
-                onChange={e => setOrderSearch(e.target.value)}
+              <input value={orderSearch} onChange={e => setOrderSearch(e.target.value)}
                 placeholder="🔍 Search by ID or customer..."
-                style={{ ...inputStyle, maxWidth: '300px', flex: 1 }}
-              />
+                style={{ ...inputStyle, maxWidth: '300px', flex: 1 }} />
               <select value={orderFilter} onChange={e => setOrderFilter(e.target.value)}
                 style={{ ...inputStyle, maxWidth: '160px' }}>
                 <option value="all">All Status</option>
@@ -836,24 +746,19 @@ useEffect(() => {
                 ))}
               </select>
               <div style={{ padding: '10px 16px', borderRadius: '10px',
-                background: 'rgba(88,166,255,0.1)',
-                border: '1px solid rgba(88,166,255,0.2)',
+                background: 'rgba(88,166,255,0.1)', border: '1px solid rgba(88,166,255,0.2)',
                 color: '#58A6FF', fontSize: '13px', fontWeight: '700' }}>
                 📋 {filteredOrders.length} orders
               </div>
             </div>
-
-            <div style={{ borderRadius: '20px', background: '#161B22',
-              border: '1px solid #30363D', overflow: 'hidden' }}>
+            <div style={{ borderRadius: '20px', background: '#161B22', border: '1px solid #30363D', overflow: 'hidden' }}>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid #30363D' }}>
                       {['ID','Customer','Items','Amount','Status','Tracking','Date'].map(h => (
                         <th key={h} style={{ padding: '14px 16px', textAlign: 'left',
-                          color: '#555', fontSize: '11px', fontWeight: '700', letterSpacing: '1px' }}>
-                          {h}
-                        </th>
+                          color: '#555', fontSize: '11px', fontWeight: '700', letterSpacing: '1px' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -862,10 +767,8 @@ useEffect(() => {
                       <motion.tr key={o._id}
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                         transition={{ delay: i * 0.02 }}
-                        style={{ borderBottom: '1px solid rgba(48,54,61,0.3)' }}
-                      >
-                        <td style={{ padding: '12px 16px', color: '#58A6FF',
-                          fontSize: '12px', fontFamily: 'JetBrains Mono' }}>
+                        style={{ borderBottom: '1px solid rgba(48,54,61,0.3)' }}>
+                        <td style={{ padding: '12px 16px', color: '#58A6FF', fontSize: '12px', fontFamily: 'JetBrains Mono' }}>
                           #{o._id?.slice(-6).toUpperCase()}
                         </td>
                         <td style={{ padding: '12px 16px' }}>
@@ -880,22 +783,18 @@ useEffect(() => {
                               <p style={{ color: '#fff', fontSize: '13px', fontWeight: '600' }}>
                                 {o.userId?.name || 'Customer'}
                               </p>
-                              <p style={{ color: '#555', fontSize: '11px' }}>
-                                {o.userId?.email || ''}
-                              </p>
+                              <p style={{ color: '#555', fontSize: '11px' }}>{o.userId?.email || ''}</p>
                             </div>
                           </div>
                         </td>
                         <td style={{ padding: '12px 16px', color: '#8B949E', fontSize: '13px' }}>
                           {o.items?.length || 0} items
                         </td>
-                        <td style={{ padding: '12px 16px', color: '#00FFB3',
-                          fontWeight: '700', fontSize: '14px' }}>
+                        <td style={{ padding: '12px 16px', color: '#00FFB3', fontWeight: '700', fontSize: '14px' }}>
                           ₹{o.totalAmount}
                         </td>
                         <td style={{ padding: '12px 16px' }}>
-                          <span style={{ padding: '4px 10px', borderRadius: '20px',
-                            fontSize: '11px', fontWeight: '700',
+                          <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700',
                             color: statusColors[o.status] || '#8B949E',
                             background: `${statusColors[o.status]}15` }}>
                             {(o.status || 'pending').toUpperCase()}
@@ -924,27 +823,19 @@ useEffect(() => {
           </motion.div>
         )}
 
-        {/* ══ CUSTOMERS ══ */}
+        {/* CUSTOMERS */}
         {tab === 'customers' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-
-              {/* Customer List */}
-              <div style={{ borderRadius: '20px', background: '#161B22',
-                border: '1px solid #30363D', overflow: 'hidden' }}>
+              <div style={{ borderRadius: '20px', background: '#161B22', border: '1px solid #30363D', overflow: 'hidden' }}>
                 <div style={{ padding: '18px 20px', borderBottom: '1px solid #30363D' }}>
-                  <h3 style={{ color: '#fff', fontWeight: '700' }}>
-                    👥 All Customers ({customers.length})
-                  </h3>
+                  <h3 style={{ color: '#fff', fontWeight: '700' }}>👥 All Customers ({customers.length})</h3>
                 </div>
                 <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {customers.length > 0 ? customers.map((c, i) => (
-                    <div key={i} style={{
-                      display: 'flex', alignItems: 'center', gap: '12px',
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px',
                       padding: '12px', borderRadius: '12px',
-                      background: 'rgba(255,255,255,0.02)',
-                      border: '1px solid rgba(48,54,61,0.5)'
-                    }}>
+                      background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(48,54,61,0.5)' }}>
                       <div style={{ width: '40px', height: '40px', borderRadius: '50%',
                         background: `linear-gradient(135deg, ${COLORS[i%5]}, ${COLORS[(i+2)%5]})`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -952,49 +843,31 @@ useEffect(() => {
                         {(c?.name?.[0] || 'U').toUpperCase()}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <p style={{ color: '#fff', fontWeight: '600', fontSize: '14px' }}>
-                          {c?.name || 'Customer'}
-                        </p>
+                        <p style={{ color: '#fff', fontWeight: '600', fontSize: '14px' }}>{c?.name || 'Customer'}</p>
                         <p style={{ color: '#555', fontSize: '12px' }}>{c?.email || ''}</p>
                       </div>
                     </div>
                   )) : (
-                    <p style={{ color: '#555', textAlign: 'center', padding: '20px' }}>
-                      No customers yet
-                    </p>
+                    <p style={{ color: '#555', textAlign: 'center', padding: '20px' }}>No customers yet</p>
                   )}
                 </div>
               </div>
 
-              {/* Customer Feedbacks */}
-              <div style={{ borderRadius: '20px', background: '#161B22',
-                border: '1px solid #30363D', overflow: 'hidden' }}>
+              <div style={{ borderRadius: '20px', background: '#161B22', border: '1px solid #30363D', overflow: 'hidden' }}>
                 <div style={{ padding: '18px 20px', borderBottom: '1px solid #30363D' }}>
-                  <h3 style={{ color: '#fff', fontWeight: '700' }}>
-                    ⭐ Customer Feedbacks ({feedbacks.length})
-                  </h3>
+                  <h3 style={{ color: '#fff', fontWeight: '700' }}>⭐ Feedbacks ({feedbacks.length})</h3>
                 </div>
                 <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px',
                   maxHeight: '400px', overflowY: 'auto' }}>
                   {feedbacks.length > 0 ? feedbacks.map((f, i) => (
-                    <div key={i} style={{
-                      padding: '14px', borderRadius: '12px',
-                      background: 'rgba(255,255,255,0.02)',
-                      border: '1px solid rgba(48,54,61,0.5)'
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between',
-                        alignItems: 'center', marginBottom: '8px' }}>
-                        <p style={{ color: '#fff', fontWeight: '600', fontSize: '13px' }}>
-                          {f.userName || 'User'}
-                        </p>
-                        <span style={{
-                          padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700',
-                          color: f.sentiment === 'Positive' ? '#00FFB3' :
-                                 f.sentiment === 'Negative' ? '#F85149' : '#FFA657',
+                    <div key={i} style={{ padding: '14px', borderRadius: '12px',
+                      background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(48,54,61,0.5)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <p style={{ color: '#fff', fontWeight: '600', fontSize: '13px' }}>{f.userName || 'User'}</p>
+                        <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700',
+                          color: f.sentiment === 'Positive' ? '#00FFB3' : f.sentiment === 'Negative' ? '#F85149' : '#FFA657',
                           background: f.sentiment === 'Positive' ? 'rgba(0,255,179,0.1)' :
-                                      f.sentiment === 'Negative' ? 'rgba(248,81,73,0.1)' :
-                                      'rgba(255,166,87,0.1)',
-                        }}>
+                            f.sentiment === 'Negative' ? 'rgba(248,81,73,0.1)' : 'rgba(255,166,87,0.1)' }}>
                           {f.sentiment}
                         </span>
                       </div>
@@ -1003,14 +876,10 @@ useEffect(() => {
                           <span key={s} style={{ color: s <= f.rating ? '#FFA657' : '#333', fontSize: '12px' }}>★</span>
                         ))}
                       </div>
-                      <p style={{ color: '#8B949E', fontSize: '12px', lineHeight: '1.5' }}>
-                        {f.comment}
-                      </p>
+                      <p style={{ color: '#8B949E', fontSize: '12px', lineHeight: '1.5' }}>{f.comment}</p>
                     </div>
                   )) : (
-                    <p style={{ color: '#555', textAlign: 'center', padding: '20px' }}>
-                      No feedbacks yet
-                    </p>
+                    <p style={{ color: '#555', textAlign: 'center', padding: '20px' }}>No feedbacks yet</p>
                   )}
                 </div>
               </div>
@@ -1018,36 +887,21 @@ useEffect(() => {
           </motion.div>
         )}
 
-        {/* ══ CUSTOMER CARE ══ */}
+        {/* CUSTOMER CARE */}
         {tab === 'care' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '20px',
-              height: 'calc(100vh - 180px)' }}>
-
-              {/* Customer List */}
-              <div style={{ borderRadius: '20px', background: '#161B22',
-                border: '1px solid #30363D', overflow: 'hidden',
-                display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '20px', height: 'calc(100vh - 180px)' }}>
+              <div style={{ borderRadius: '20px', background: '#161B22', border: '1px solid #30363D',
+                overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ padding: '16px 20px', borderBottom: '1px solid #30363D' }}>
-                  <h3 style={{ color: '#fff', fontWeight: '700', fontSize: '14px' }}>
-                    💬 Conversations
-                  </h3>
+                  <h3 style={{ color: '#fff', fontWeight: '700', fontSize: '14px' }}>💬 Conversations</h3>
                 </div>
                 <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
                   {customers.length > 0 ? customers.map((c, i) => (
-                    <motion.div key={i} whileHover={{ x: 4 }}
-                      onClick={() => setSelectedCustomer(c)}
-                      style={{
-                        padding: '12px', borderRadius: '12px', cursor: 'pointer',
-                        marginBottom: '8px',
-                        background: selectedCustomer === c
-                          ? 'rgba(88,166,255,0.1)'
-                          : 'rgba(255,255,255,0.02)',
-                        border: `1px solid ${selectedCustomer === c
-                          ? 'rgba(88,166,255,0.3)'
-                          : 'rgba(48,54,61,0.5)'}`,
-                      }}
-                    >
+                    <motion.div key={i} whileHover={{ x: 4 }} onClick={() => setSelectedCustomer(c)}
+                      style={{ padding: '12px', borderRadius: '12px', cursor: 'pointer', marginBottom: '8px',
+                        background: selectedCustomer === c ? 'rgba(88,166,255,0.1)' : 'rgba(255,255,255,0.02)',
+                        border: `1px solid ${selectedCustomer === c ? 'rgba(88,166,255,0.3)' : 'rgba(48,54,61,0.5)'}` }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div style={{ width: '36px', height: '36px', borderRadius: '50%',
                           background: `linear-gradient(135deg, ${COLORS[i%5]}, ${COLORS[(i+2)%5]})`,
@@ -1060,26 +914,20 @@ useEffect(() => {
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {c?.name || 'Customer'}
                           </p>
-                          <p style={{ color: '#555', fontSize: '11px' }}>
-                            📧 {c?.email || 'No email'}
-                          </p>
+                          <p style={{ color: '#555', fontSize: '11px' }}>📧 {c?.email || 'No email'}</p>
                         </div>
                       </div>
                     </motion.div>
                   )) : (
-                    <p style={{ color: '#555', textAlign: 'center', padding: '20px', fontSize: '13px' }}>
-                      No customers yet
-                    </p>
+                    <p style={{ color: '#555', textAlign: 'center', padding: '20px', fontSize: '13px' }}>No customers yet</p>
                   )}
                 </div>
               </div>
 
-              {/* Chat Area */}
-              <div style={{ borderRadius: '20px', background: '#161B22',
-                border: '1px solid #30363D', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ borderRadius: '20px', background: '#161B22', border: '1px solid #30363D',
+                display: 'flex', flexDirection: 'column' }}>
                 {selectedCustomer ? (
                   <>
-                    {/* Chat Header */}
                     <div style={{ padding: '16px 20px', borderBottom: '1px solid #30363D',
                       display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{ width: '40px', height: '40px', borderRadius: '50%',
@@ -1089,71 +937,42 @@ useEffect(() => {
                         {(selectedCustomer?.name?.[0] || 'U').toUpperCase()}
                       </div>
                       <div>
-                        <p style={{ color: '#fff', fontWeight: '700' }}>
-                          {selectedCustomer?.name || 'Customer'}
-                        </p>
-                        <p style={{ color: '#555', fontSize: '12px' }}>
-                          📧 {selectedCustomer?.email}
-                        </p>
+                        <p style={{ color: '#fff', fontWeight: '700' }}>{selectedCustomer?.name || 'Customer'}</p>
+                        <p style={{ color: '#555', fontSize: '12px' }}>📧 {selectedCustomer?.email}</p>
                       </div>
                     </div>
-
-                    {/* Messages */}
                     <div style={{ flex: 1, overflowY: 'auto', padding: '20px',
                       display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {messages.filter(m => m.customerId === selectedCustomer?._id || true)
-                        .map(msg => (
-                        <div key={msg.id} style={{
-                          display: 'flex',
-                          justifyContent: msg.from === 'admin' ? 'flex-end' : 'flex-start'
-                        }}>
-                          <div style={{
-                            maxWidth: '70%', padding: '12px 16px',
-                            borderRadius: msg.from === 'admin'
-                              ? '16px 16px 4px 16px'
-                              : '16px 16px 16px 4px',
+                      {messages.map(msg => (
+                        <div key={msg.id} style={{ display: 'flex',
+                          justifyContent: msg.from === 'admin' ? 'flex-end' : 'flex-start' }}>
+                          <div style={{ maxWidth: '70%', padding: '12px 16px',
+                            borderRadius: msg.from === 'admin' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                             background: msg.from === 'admin'
                               ? 'linear-gradient(135deg, rgba(88,166,255,0.2), rgba(0,255,179,0.1))'
                               : 'rgba(255,255,255,0.05)',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                          }}>
-                            <p style={{ color: '#fff', fontSize: '13px', lineHeight: '1.5' }}>
-                              {msg.text}
-                            </p>
-                            <p style={{ color: '#555', fontSize: '10px', marginTop: '4px', textAlign: 'right' }}>
-                              {msg.time}
-                            </p>
+                            border: '1px solid rgba(255,255,255,0.08)' }}>
+                            <p style={{ color: '#fff', fontSize: '13px', lineHeight: '1.5' }}>{msg.text}</p>
+                            <p style={{ color: '#555', fontSize: '10px', marginTop: '4px', textAlign: 'right' }}>{msg.time}</p>
                           </div>
                         </div>
                       ))}
                       {messages.length === 0 && (
-                        <div style={{ textAlign: 'center', color: '#555',
-                          fontSize: '13px', marginTop: '40px' }}>
+                        <div style={{ textAlign: 'center', color: '#555', fontSize: '13px', marginTop: '40px' }}>
                           <p style={{ fontSize: '40px', marginBottom: '12px' }}>📧</p>
                           <p>Send a message to {selectedCustomer?.name}</p>
-                          <p style={{ fontSize: '12px', marginTop: '4px' }}>
-                            via {selectedCustomer?.email}
-                          </p>
                         </div>
                       )}
                     </div>
-
-                    {/* Reply Box */}
-                    <div style={{ padding: '16px 20px', borderTop: '1px solid #30363D',
-                      display: 'flex', gap: '10px' }}>
-                      <input
-                        value={replyMsg}
-                        onChange={e => setReplyMsg(e.target.value)}
+                    <div style={{ padding: '16px 20px', borderTop: '1px solid #30363D', display: 'flex', gap: '10px' }}>
+                      <input value={replyMsg} onChange={e => setReplyMsg(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && sendReply()}
                         placeholder={`Message to ${selectedCustomer?.name}...`}
-                        style={{ ...inputStyle, flex: 1 }}
-                      />
-                      <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                        onClick={sendReply}
+                        style={{ ...inputStyle, flex: 1 }} />
+                      <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={sendReply}
                         style={{ padding: '10px 20px', borderRadius: '10px',
                           background: 'linear-gradient(135deg, #58A6FF, #00FFB3)',
-                          border: 'none', color: '#000', fontWeight: '700',
-                          cursor: 'pointer', fontSize: '13px' }}>
+                          border: 'none', color: '#000', fontWeight: '700', cursor: 'pointer', fontSize: '13px' }}>
                         Send 📧
                       </motion.button>
                     </div>
@@ -1162,9 +981,7 @@ useEffect(() => {
                   <div style={{ flex: 1, display: 'flex', alignItems: 'center',
                     justifyContent: 'center', flexDirection: 'column', gap: '12px' }}>
                     <span style={{ fontSize: '48px' }}>💬</span>
-                    <p style={{ color: '#555', fontSize: '14px' }}>
-                      Select a customer to start conversation
-                    </p>
+                    <p style={{ color: '#555', fontSize: '14px' }}>Select a customer to start conversation</p>
                   </div>
                 )}
               </div>
@@ -1172,36 +989,29 @@ useEffect(() => {
           </motion.div>
         )}
 
-        {/* ══ SETTINGS ══ */}
+        {/* SETTINGS */}
         {tab === 'settings' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div style={{ maxWidth: '600px' }}>
               {[
-                { label: 'Store Name',     value: 'EmmanStore',          icon: '🏪' },
-                { label: 'Admin Email',    value: 'admin@emmanstore.com', icon: '📧' },
-                { label: 'Currency',       value: 'INR (₹)',             icon: '💰' },
-                { label: 'Country',        value: 'India',               icon: '🇮🇳' },
-                { label: 'AI Model',       value: 'Llama3 (Ollama)',     icon: '🤖' },
-                { label: 'Database',       value: 'MongoDB Atlas',        icon: '🍃' },
+                { label: 'Store Name',  value: 'EmmanStore',          icon: '🏪' },
+                { label: 'Admin Email', value: 'admin@emmanstore.com', icon: '📧' },
+                { label: 'Currency',    value: 'INR (₹)',             icon: '💰' },
+                { label: 'Country',     value: 'India',               icon: '🇮🇳' },
+                { label: 'AI Model',    value: 'Groq (llama3)',        icon: '🤖' },
+                { label: 'Database',    value: 'MongoDB Atlas',        icon: '🍃' },
               ].map((s, i) => (
                 <motion.div key={i}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  style={{
-                    display: 'flex', justifyContent: 'space-between',
-                    alignItems: 'center', padding: '18px 20px',
-                    borderRadius: '14px', marginBottom: '10px',
-                    background: '#161B22', border: '1px solid #30363D'
-                  }}
-                >
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '18px 20px', borderRadius: '14px', marginBottom: '10px',
+                    background: '#161B22', border: '1px solid #30363D' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <span style={{ fontSize: '20px' }}>{s.icon}</span>
                     <span style={{ color: '#8B949E', fontSize: '14px' }}>{s.label}</span>
                   </div>
-                  <span style={{ color: '#fff', fontWeight: '600', fontSize: '14px' }}>
-                    {s.value}
-                  </span>
+                  <span style={{ color: '#fff', fontWeight: '600', fontSize: '14px' }}>{s.value}</span>
                 </motion.div>
               ))}
             </div>
@@ -1209,7 +1019,7 @@ useEffect(() => {
         )}
       </div>
 
-      {/* ══ Product Form Modal ══ */}
+      {/* Product Form Modal */}
       <AnimatePresence>
         {showForm && (
           <motion.div
@@ -1217,32 +1027,23 @@ useEffect(() => {
             onClick={() => setShowForm(false)}
             style={{ position: 'fixed', inset: 0, zIndex: 9999,
               background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
-          >
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
             <motion.div
-              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
+              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
               onClick={e => e.stopPropagation()}
-              style={{
-                width: '100%', maxWidth: '620px',
-                maxHeight: '90vh', overflowY: 'auto',
+              style={{ width: '100%', maxWidth: '620px', maxHeight: '90vh', overflowY: 'auto',
                 borderRadius: '24px', background: '#161B22',
                 border: '1px solid rgba(88,166,255,0.2)',
-                boxShadow: '0 40px 80px rgba(0,0,0,0.5)', padding: '32px'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between',
-                alignItems: 'center', marginBottom: '24px' }}>
+                boxShadow: '0 40px 80px rgba(0,0,0,0.5)', padding: '32px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                 <h2 style={{ color: '#fff', fontWeight: '800', fontSize: '20px' }}>
                   {editItem ? '✏️ Edit Product' : '+ Add Product'}
                 </h2>
                 <button onClick={() => setShowForm(false)}
-                  style={{ background: 'none', border: 'none', color: '#8B949E',
-                    fontSize: '24px', cursor: 'pointer' }}>×</button>
+                  style={{ background: 'none', border: 'none', color: '#8B949E', fontSize: '24px', cursor: 'pointer' }}>×</button>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                {/* Title */}
                 <div style={{ gridColumn: '1/-1' }}>
                   <label style={{ color: '#8B949E', fontSize: '11px', fontWeight: '700',
                     letterSpacing: '1px', display: 'block', marginBottom: '6px' }}>TITLE *</label>
@@ -1251,37 +1052,22 @@ useEffect(() => {
                     placeholder="Product title" style={inputStyle} />
                 </div>
 
-                {/* Category Dropdown */}
                 <div style={{ gridColumn: '1/-1' }}>
-  <label style={{ color: '#8B949E', fontSize: '11px', fontWeight: '700',
-    letterSpacing: '1px', display: 'block', marginBottom: '6px' }}>
-    CATEGORY *
-  </label>
-  <select
-    value={form.category}
-    onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
-    style={{
-      width: '100%', padding: '10px 14px', borderRadius: '10px',
-      background: 'rgba(255,255,255,0.04)',
-      border: '1px solid rgba(48,54,61,0.8)',
-      color: form.category ? '#fff' : '#8B949E',
-      fontSize: '13px', outline: 'none',
-      boxSizing: 'border-box', cursor: 'pointer'
-    }}
-  >
-    <option value="" style={{ background: '#161B22' }}>
-      Select Category
-    </option>
-    {['Mobiles','Laptops','Electronics','Fashion',
-      'Shoes','Books','Grocery','Furniture'].map(c => (
-      <option key={c} value={c} style={{ background: '#161B22' }}>
-        {c}
-      </option>
-    ))}
-  </select>
-</div>
+                  <label style={{ color: '#8B949E', fontSize: '11px', fontWeight: '700',
+                    letterSpacing: '1px', display: 'block', marginBottom: '6px' }}>CATEGORY *</label>
+                  <select value={form.category}
+                    onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '10px',
+                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(48,54,61,0.8)',
+                      color: form.category ? '#fff' : '#8B949E', fontSize: '13px', outline: 'none',
+                      boxSizing: 'border-box', cursor: 'pointer' }}>
+                    <option value="" style={{ background: '#161B22' }}>Select Category</option>
+                    {['Mobiles','Laptops','Electronics','Fashion','Shoes','Books','Grocery','Furniture'].map(c => (
+                      <option key={c} value={c} style={{ background: '#161B22' }}>{c}</option>
+                    ))}
+                  </select>
+                </div>
 
-                {/* Price */}
                 <div>
                   <label style={{ color: '#8B949E', fontSize: '11px', fontWeight: '700',
                     letterSpacing: '1px', display: 'block', marginBottom: '6px' }}>PRICE (₹) *</label>
@@ -1330,18 +1116,17 @@ useEffect(() => {
                     placeholder="S, M, L, XL" style={inputStyle} />
                 </div>
 
-                {/* Description + AI */}
                 <div style={{ gridColumn: '1/-1' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between',
-                    alignItems: 'center', marginBottom: '6px' }}>
-                    <label style={{ color: '#8B949E', fontSize: '11px', fontWeight: '700',
-                      letterSpacing: '1px' }}>DESCRIPTION</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label style={{ color: '#8B949E', fontSize: '11px', fontWeight: '700', letterSpacing: '1px' }}>
+                      DESCRIPTION
+                    </label>
                     <motion.button whileHover={{ scale: 1.05 }}
                       onClick={generateDescription} disabled={aiLoading}
                       style={{ padding: '5px 14px', borderRadius: '20px',
                         border: '1px solid rgba(88,166,255,0.3)', cursor: 'pointer',
-                        background: 'rgba(88,166,255,0.1)',
-                        color: '#58A6FF', fontSize: '11px', fontWeight: '700' }}>
+                        background: 'rgba(88,166,255,0.1)', color: '#58A6FF',
+                        fontSize: '11px', fontWeight: '700' }}>
                       {aiLoading ? '🤖 Generating...' : '🤖 AI Generate'}
                     </motion.button>
                   </div>
@@ -1355,8 +1140,7 @@ useEffect(() => {
               <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                   onClick={handleSubmit}
-                  style={{ flex: 1, padding: '14px', borderRadius: '14px',
-                    border: 'none', cursor: 'pointer',
+                  style={{ flex: 1, padding: '14px', borderRadius: '14px', border: 'none', cursor: 'pointer',
                     background: 'linear-gradient(135deg, #58A6FF, #00FFB3)',
                     color: '#000', fontWeight: '800', fontSize: '15px' }}>
                   {editItem ? '✅ Update' : '🚀 Add Product'}
@@ -1373,3 +1157,5 @@ useEffect(() => {
         )}
       </AnimatePresence>
     </div>
+  );
+}
