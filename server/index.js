@@ -11,6 +11,7 @@ const cartRoutes = require("./routes/cart");
 const orderRoutes = require("./routes/order");
 const userRoutes = require("./routes/userRoutes");
 const aiRoutes = require("./routes/ai");
+const adminAuthRoutes = require("./routes/Adminauth");
 
 const app = express();
 
@@ -48,6 +49,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/admin-auth", adminAuthRoutes);
 
 // ── Test Route ──
 app.get("/", (req, res) => {
