@@ -9,7 +9,8 @@ const transporter = require("../config/mailer");
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
-   await transporter.sendMail({
+
+await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Admin OTP - EmmanStore",
@@ -74,32 +75,51 @@ router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-  return res.status(400).json({
-    message: "Email and Password are required",
-  });
-}
+      return res.status(400).json({
+        message: "Email and Password are required"
+      });
+    }
 
-   const admin = await Admin.findOne({ email });
-    if (!admin) return res.status(400).json({ message: "Admin not found" });
+    const admin = await Admin.findOne({ email });
 
-    const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid password" });
+    if (!admin) {
+      return res.status(400).json({
+        message: "Admin not found"
+      });
+    }
+
+    const isMatch = await bcrypt.compare(
+      password,
+      admin.password
+    );
+
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Invalid password"
+      });
+    }
 
     const token = jwt.sign(
-      { id: admin._id, username: admin.username, role: "admin" },
+      {
+        id: admin._id,
+        role: "admin"
+      },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      {
+        expiresIn: "7d"
+      }
     );
 
     res.json({
       message: "Login successful",
-      token,
-      admin: { fullName: admin.fullName, username: admin.username, email: admin.email },
-      loginTime: new Date().toISOString(),
+      token
     });
+
   } catch (err) {
-    console.error("Admin Login Error:", err);
-    res.status(500).json({ message: err.message });
+    console.error(err);
+    res.status(500).json({
+      message: err.message
+    });
   }
 });
 
