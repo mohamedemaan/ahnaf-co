@@ -1,235 +1,116 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
-const API = import.meta.env.VITE_API_URL;
-
-function Login() {
+const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [focused, setFocused] = useState("");
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleSocialLogin = (provider) => {
+    alert(`Authenticating with ${provider}...`);
+    navigate('/home');
   };
 
-  const loginUser = async (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
-    try {
-      setLoading(true);
-      const res = await axios.post(`${API}/api/auth/login`, formData);
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      alert("Login successful! 🎉");
-      navigate("/home");
-    } catch (err) {
-      alert(err.response?.data?.message || "Login failed ❌");
-    } finally {
-      setLoading(false);
-    }
+    navigate('/home');
   };
 
   return (
-    <div className="min-h-screen particle-bg flex items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4 font-sans pb-24 md:pb-4">
+      
+      {/* Brand Header */}
+      <div className="flex justify-center items-center mb-8 gap-3">
+        <span className="text-5xl drop-shadow-md">🛍️</span>
+        <h1 className="text-4xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 drop-shadow-sm">Ahnaf & Co</h1>
+      </div>
 
-      {/* Grid Background */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(88,166,255,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(88,166,255,0.03) 1px, transparent 1px)
-          `,
-          backgroundSize: "50px 50px",
-        }}
-      />
-
-      {/* Orbs */}
-      <motion.div
-        animate={{ x: [0, 30, 0], y: [0, -30, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="absolute top-20 left-20 w-64 h-64 rounded-full pointer-events-none"
-        style={{
-          background: "radial-gradient(circle, rgba(88,166,255,0.1), transparent)",
-          filter: "blur(40px)",
-        }}
-      />
-      <motion.div
-        animate={{ x: [0, -30, 0], y: [0, 30, 0] }}
-        transition={{ duration: 8, repeat: Infinity }}
-        className="absolute bottom-20 right-20 w-64 h-64 rounded-full pointer-events-none"
-        style={{
-          background: "radial-gradient(circle, rgba(0,255,179,0.1), transparent)",
-          filter: "blur(40px)",
-        }}
-      />
-
-      {/* Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 40, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, type: "spring" }}
-        className="glass w-full max-w-md p-8 relative z-10"
-      >
-
-        {/* Logo */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-center mb-8"
-        >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-            className="text-5xl mb-3 inline-block"
-          >
-            🛍️
-          </motion.div>
-          <h1
-            className="text-2xl font-black tracking-widest gradient-text"
-            style={{ fontFamily: "JetBrains Mono" }}
-          >
-            AHNAF ENTERPRISES
-          </h1>
-          <p className="text-sm mt-1" style={{ color: "#8B949E" }}>
-            Welcome Back 👋
-          </p>
-        </motion.div>
-
-        {/* Form */}
-        <form onSubmit={loginUser}>
-
-          {/* Email */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mb-4"
-          >
-            <label
-              className="text-xs font-semibold mb-2 block"
-              style={{ color: "#8B949E", fontFamily: "JetBrains Mono" }}
-            >
-              EMAIL ADDRESS
-            </label>
-            <input
-              type="email"
-              name="email"
-              placeholder="your@email.com"
-              onChange={handleChange}
-              onFocus={() => setFocused("email")}
-              onBlur={() => setFocused("")}
-              className="dark-input w-full"
-              style={{
-                borderColor: focused === "email" ? "#58A6FF" : "#30363D",
-              }}
-              required
-            />
-          </motion.div>
-
-          {/* Password */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mb-6"
-          >
-            <label
-              className="text-xs font-semibold mb-2 block"
-              style={{ color: "#8B949E", fontFamily: "JetBrains Mono" }}
-            >
-              PASSWORD
-            </label>
-            <input
-              type="password"
-              name="password"
-              placeholder="••••••••"
-              onChange={handleChange}
-              onFocus={() => setFocused("password")}
-              onBlur={() => setFocused("")}
-              className="dark-input w-full"
-              style={{
-                borderColor: focused === "password" ? "#58A6FF" : "#30363D",
-              }}
-              required
-            />
-          </motion.div>
-
-          {/* Submit */}
-          <motion.button
-            type="submit"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            disabled={loading}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="cyber-btn w-full py-4 text-base font-bold rounded-xl mt-2"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <motion.span
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                >
-                  ⟳
-                </motion.span>
-                Authenticating...
-              </span>
-            ) : (
-              "Login →"
-            )}
-          </motion.button>
-
-        </form>
-
-        {/* Divider */}
-        <div className="flex items-center gap-3 my-6">
-          <div className="flex-1 h-px" style={{ background: "#30363D" }} />
-          <span className="text-xs" style={{ color: "#8B949E" }}>or</span>
-          <div className="flex-1 h-px" style={{ background: "#30363D" }} />
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+        
+        {/* Header Section */}
+        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 text-center text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
+          <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-20 h-20 bg-blue-400 opacity-20 rounded-full blur-lg"></div>
+          
+          <h1 className="text-3xl font-black tracking-tight mb-2 relative z-10">Welcome Back</h1>
+          <p className="text-blue-100 text-sm font-medium relative z-10">Sign in to continue your shopping journey</p>
         </div>
 
-        {/* Register Link */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="text-center"
-        >
-          <p className="text-sm" style={{ color: "#8B949E" }}>
-            No account?{" "}
-            <Link
-              to="/register"
-              className="font-bold"
-              style={{ color: "#58A6FF" }}
+        {/* Form Section */}
+        <div className="p-8">
+          <form className="space-y-5" onSubmit={handleLogin}>
+            
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-1">Email Address</label>
+              <div className="relative">
+                <span className="absolute left-3 top-3 text-slate-400">✉️</span>
+                <input 
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-slate-700 font-medium"
+                  placeholder="name@example.com"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-sm font-bold text-slate-700">Password</label>
+                <a href="#" className="text-xs font-bold text-blue-600 hover:text-blue-700">Forgot Password?</a>
+              </div>
+              <div className="relative">
+                <span className="absolute left-3 top-3 text-slate-400">🔒</span>
+                <input 
+                  type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-slate-700 font-medium"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+            </div>
+
+            <button 
+              type="submit" 
+              className="w-full py-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:shadow-blue-600/50 hover:-translate-y-0.5 transition-all active:translate-y-0 mt-4"
             >
-              Create Account →
+              Sign In
+            </button>
+            
+          </form>
+
+          {/* Divider */}
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <div className="h-px bg-slate-200 flex-1"></div>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Or continue with</span>
+            <div className="h-px bg-slate-200 flex-1"></div>
+          </div>
+
+          {/* Social Logins */}
+          <div className="mt-6 grid grid-cols-2 gap-4">
+            <button type="button" onClick={() => handleSocialLogin('Google')} className="flex items-center justify-center gap-2 py-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm font-semibold text-slate-700">
+              <span className="text-xl">G</span> Google
+            </button>
+            <button type="button" onClick={() => handleSocialLogin('Apple')} className="flex items-center justify-center gap-2 py-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm font-semibold text-slate-700">
+              <span className="text-xl">🍎</span> Apple
+            </button>
+          </div>
+
+          {/* Footer */}
+          <p className="mt-8 text-center text-sm font-medium text-slate-600">
+            Don't have an account?{' '}
+            <Link to="/register" className="font-bold text-blue-600 hover:text-blue-700 hover:underline">
+              Create an account
             </Link>
           </p>
-        </motion.div>
+        </div>
 
-        {/* Back */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="text-center mt-4"
-        >
-          <Link to="/" className="text-xs" style={{ color: "#8B949E" }}>
-            ← Back to Home
-          </Link>
-        </motion.div>
-
-      </motion.div>
+      </div>
     </div>
   );
-}
+};
 
 export default Login;

@@ -12,11 +12,10 @@ function ProductDetails() {
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   
-  // ✅ lazy init — useEffect தேவையில்ல
   const user = useState(() => {
-  const userData = localStorage.getItem('user');
-  return userData ? JSON.parse(userData) : null;
-})[0]
+    const userData = localStorage.getItem('user');
+    return userData ? JSON.parse(userData) : null;
+  })[0]
   
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
@@ -26,11 +25,28 @@ function ProductDetails() {
   const [activeTab, setActiveTab] = useState("details");
   const [addedToCart, setAddedToCart] = useState(false);
 
+  const [rating, setRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+
   useEffect(() => {
     const getProduct = async () => {
       try {
-        const res = await axios.get(`${API}/api/products/${id}`);
-        setProduct(res.data);
+        const [prodRes, revRes] = await Promise.all([
+          axios.get(`${API}/api/products/${id}`),
+          axios.get(`${API}/api/reviews/${id}`).catch(() => ({ data: { success: false } }))
+        ]);
+        
+        setProduct(prodRes.data);
+        
+        if (revRes.data?.success && revRes.data.reviews?.length > 0) {
+          const reviews = revRes.data.reviews;
+          const avg = reviews.reduce((a, r) => a + r.rating, 0) / reviews.length;
+          setRating(avg.toFixed(1));
+          setTotalReviews(reviews.length);
+        } else {
+          setRating(0);
+          setTotalReviews(0);
+        }
       } catch (err) {
         console.log("Error:", err);
       }
@@ -65,14 +81,8 @@ function ProductDetails() {
 
   if (!product) {
     return (
-      <div className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0D1117" }}>
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 rounded-full"
-          style={{ border: "3px solid #30363D", borderTop: "3px solid #58A6FF" }}
-        />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500"></div>
       </div>
     );
   }
@@ -82,429 +92,293 @@ function ProductDetails() {
     : null;
 
   return (
-    <div className="min-h-screen" style={{ background: "#0D1117" }}>
+    <div className="min-h-screen bg-slate-50 font-sans pb-10">
 
       {/* Navbar */}
-      <motion.nav
-        initial={{ y: -80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="sticky top-0 z-50 px-6 py-4 flex items-center gap-4"
-        style={{
-          background: "rgba(13,17,23,0.95)",
-          backdropFilter: "blur(20px)",
-          borderBottom: "1px solid #30363D",
-        }}
-      >
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+      <nav className="bg-gradient-to-r from-teal-400 to-teal-300 p-3 md:p-4 sticky top-0 z-50 shadow-sm flex items-center justify-between relative">
+        
+        {/* LEFT: Back Button */}
+        <button
           onClick={() => navigate("/home")}
-          className="px-4 py-2 rounded-xl text-sm font-semibold"
-          style={{ border: "1px solid #30363D", color: "#8B949E" }}
+          className="px-3 md:px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-bold transition flex items-center whitespace-nowrap z-10"
         >
           ← Back
-        </motion.button>
-        <motion.span
-          animate={{ rotate: 360 }}
-          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-          className="text-2xl"
-        >
-          🛍️
-        </motion.span>
-        <span className="font-black tracking-widest gradient-text flex-1"
-          style={{ fontFamily: "JetBrains Mono" }}>
-          AHNAF ENTERPRISES
-        </span>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          onClick={() => navigate("/cart")}
-          className="px-4 py-2 rounded-xl text-sm font-semibold"
-          style={{ border: "1px solid #30363D", color: "#FFFFFF" }}
-        >
-          🛒 Cart
-        </motion.button>
-      </motion.nav>
+        </button>
 
-      <div className="max-w-6xl mx-auto px-6 py-10">
-        <div className="rounded-3xl overflow-hidden"
-          style={{ background: "#161B22", border: "1px solid #30363D" }}>
+        {/* CENTER: Logo */}
+        <div 
+          onClick={() => navigate("/")}
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 cursor-pointer z-0"
+        >
+          <span className="text-xl md:text-2xl">🛍️</span>
+          <span className="font-black text-lg md:text-xl text-white tracking-wider whitespace-nowrap">
+            Ahnaf & Co
+          </span>
+        </div>
+
+        {/* RIGHT: Icons & Cart */}
+        <div className="flex items-center gap-1 md:gap-3 z-10">
+          <button
+            onClick={() => navigate("/home")}
+            title="Home"
+            className="p-2 text-white hover:bg-white/20 rounded-lg text-lg md:text-xl transition flex items-center justify-center"
+          >
+            🏠
+          </button>
+          <button
+            onClick={() => navigate("/myorders")}
+            title="Orders"
+            className="p-2 text-white hover:bg-white/20 rounded-lg text-lg md:text-xl transition flex items-center justify-center"
+          >
+            📦
+          </button>
+          <button
+            onClick={() => navigate("/cart")}
+            className="px-3 md:px-4 py-2 bg-white text-teal-600 hover:bg-teal-50 rounded-lg text-sm font-bold shadow-sm transition flex items-center gap-2 whitespace-nowrap"
+          >
+            🛒 <span className="hidden md:inline">Cart</span>
+          </button>
+        </div>
+      </nav>
+
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-10">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="flex flex-col md:flex-row">
 
             {/* Left — Images */}
-            <div className="md:w-1/2 p-8">
-              <motion.div
-                className="relative rounded-2xl overflow-hidden mb-4"
-                style={{ background: "#1C2128" }}
-              >
+            <div className="md:w-1/2 p-4 md:p-8 bg-slate-50/50">
+              <div className="relative rounded-2xl overflow-hidden mb-4 bg-white border border-gray-100 flex items-center justify-center h-80 md:h-[450px]">
                 <AnimatePresence mode="wait">
-                  <motion.img
-                    key={selectedImage}
-                    initial={{ opacity: 0, scale: 1.05 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    src={product.images?.[selectedImage] || "https://via.placeholder.com/400"}
-                    alt={product.title}
-                    className="w-full h-96 object-cover"
-                  />
+                  {product.images?.[selectedImage]?.match(/\.(mp4|webm|mov)$/i) ? (
+                    <motion.video 
+                      key={selectedImage}
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      src={product.images[selectedImage]} autoPlay loop muted playsInline 
+                      className="max-h-full max-w-full object-contain" 
+                    />
+                  ) : (
+                    <motion.img
+                      key={selectedImage}
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      src={product.images?.[selectedImage] || "https://via.placeholder.com/400"}
+                      alt={product.title}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  )}
                 </AnimatePresence>
 
                 {discount && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute top-4 left-4 px-3 py-1 rounded-xl text-sm font-black"
-                    style={{ background: "#F85149", color: "#FFFFFF" }}
-                  >
-                    -{discount}% OFF
-                  </motion.span>
+                  <span className="absolute top-4 left-4 bg-rose-500 text-white px-3 py-1 rounded-lg text-xs font-black shadow-md">
+                    {discount}% OFF
+                  </span>
                 )}
 
                 <div className="absolute top-4 right-4 flex flex-col gap-2">
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+                  <button
                     onClick={() => setWishlist(!wishlist)}
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-xl"
-                    style={{
-                      background: "rgba(13,17,23,0.8)",
-                      backdropFilter: "blur(10px)",
-                      border: `1px solid ${wishlist ? "#F85149" : "#30363D"}`,
-                    }}
+                    className="w-10 h-10 rounded-full bg-white/90 backdrop-blur shadow-sm border border-gray-100 flex items-center justify-center text-xl hover:scale-105 transition"
                   >
                     {wishlist ? "❤️" : "🤍"}
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+                  </button>
+                  <button
                     onClick={shareProduct}
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-xl"
-                    style={{
-                      background: "rgba(13,17,23,0.8)",
-                      backdropFilter: "blur(10px)",
-                      border: "1px solid #30363D",
-                    }}
+                    className="w-10 h-10 rounded-full bg-white/90 backdrop-blur shadow-sm border border-gray-100 flex items-center justify-center text-xl hover:scale-105 transition text-gray-600"
                   >
                     🔗
-                  </motion.button>
+                  </button>
                 </div>
-              </motion.div>
+              </div>
 
               {product.images?.length > 1 && (
-                <div className="flex gap-3">
+                <div className="flex gap-3 overflow-x-auto pb-2">
                   {product.images.map((img, i) => (
-                    <motion.img
-                      key={i}
-                      src={img}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                    <div 
+                      key={i} 
                       onClick={() => setSelectedImage(i)}
-                      className="w-16 h-16 object-cover rounded-xl cursor-pointer"
-                      style={{
-                        border: `2px solid ${selectedImage === i ? "#58A6FF" : "#30363D"}`,
-                        boxShadow: selectedImage === i ? "0 0 10px rgba(88,166,255,0.4)" : "none",
-                      }}
-                    />
+                      className={`w-16 h-16 rounded-xl cursor-pointer overflow-hidden flex items-center justify-center bg-white flex-shrink-0 transition-all ${selectedImage === i ? "border-2 border-teal-500 shadow-md scale-105" : "border border-gray-200 opacity-70 hover:opacity-100"}`}
+                    >
+                      {img?.match(/\.(mp4|webm|mov)$/i) ? (
+                        <span className="text-xl">▶️</span>
+                      ) : (
+                        <img src={img} className="w-full h-full object-cover" />
+                      )}
+                    </div>
                   ))}
                 </div>
               )}
             </div>
 
             {/* Right — Details */}
-            <div className="md:w-1/2 p-8 flex flex-col">
+            <div className="md:w-1/2 p-6 md:p-8 flex flex-col bg-white">
 
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-xs font-bold mb-2 tracking-widest"
-                style={{ color: "#58A6FF", fontFamily: "JetBrains Mono" }}
-              >
-                ✦ {product.category?.toUpperCase()}
-              </motion.p>
+              <div className="flex justify-between items-start gap-4">
+                <div>
+                  <p className="text-xs font-black tracking-widest text-teal-600 mb-2 uppercase">
+                    {product.category}
+                  </p>
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 leading-tight">
+                    {product.title}
+                  </h1>
+                </div>
 
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-3xl font-black mb-4"
-                style={{ color: "#FFFFFF" }}
-              >
-                {product.title}
-              </motion.h1>
+                <div className="bg-yellow-50 border-2 border-yellow-300 px-3 py-1.5 rounded-xl flex items-center gap-1 shadow-sm shrink-0">
+                  <span className="text-yellow-600 font-black text-sm">{rating > 0 ? rating : 'New'}</span>
+                  {rating > 0 && <span className="text-yellow-500 text-sm">★</span>}
+                  {totalReviews > 0 && <span className="text-xs text-yellow-700 font-bold ml-1">({totalReviews})</span>}
+                </div>
+              </div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="flex items-center gap-4 mb-4"
-              >
-                <span className="text-4xl font-black gradient-text">
+              <div className="flex items-end gap-4 mb-4 border-b border-gray-100 pb-6">
+                <span className="text-4xl font-black text-gray-900">
                   ₹{product.price}
                 </span>
-                {product.originalPrice && (
+                {product.originalPrice > product.price && (
                   <>
-                    <span className="text-lg line-through" style={{ color: "#8B949E" }}>
+                    <span className="text-lg line-through text-gray-400 mb-1">
                       ₹{product.originalPrice}
                     </span>
-                    <span className="px-3 py-1 rounded-lg text-sm font-bold"
-                      style={{ background: "rgba(0,255,179,0.1)", color: "#00FFB3" }}>
+                    <span className="mb-1 bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">
                       Save ₹{product.originalPrice - product.price}
                     </span>
                   </>
                 )}
-              </motion.div>
+              </div>
 
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="mb-6 px-4 py-2 rounded-xl inline-flex items-center gap-2 w-fit"
-                style={{
-                  background: product.stock > 0 ? "rgba(0,255,179,0.1)" : "rgba(248,81,73,0.1)",
-                  border: `1px solid ${product.stock > 0 ? "#00FFB3" : "#F85149"}`,
-                }}
-              >
-                <span style={{ color: product.stock > 0 ? "#00FFB3" : "#F85149" }}>
-                  {product.stock > 0 ? `✓ In Stock — ${product.stock} units left` : "✕ Out of Stock"}
+              <div className="mb-6 flex items-center gap-2">
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${product.stock > 0 ? "bg-green-100 text-green-700" : "bg-rose-100 text-rose-700"}`}>
+                  {product.stock > 0 ? `✓ In Stock (${product.stock})` : "✕ Out of Stock"}
                 </span>
-              </motion.div>
-
-              {product.offers?.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="mb-6 p-4 rounded-2xl"
-                  style={{
-                    background: "rgba(255,166,87,0.05)",
-                    border: "1px solid rgba(255,166,87,0.3)",
-                  }}
-                >
-                  <h3 className="font-bold text-sm mb-2" style={{ color: "#FFA657" }}>
-                    🎁 Available Offers
-                  </h3>
-                  {product.offers.map((offer, i) => (
-                    <p key={i} className="text-sm mb-1" style={{ color: "#8B949E" }}>
-                      • {offer}
-                    </p>
-                  ))}
-                </motion.div>
-              )}
+              </div>
 
               {product.colors?.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                  className="mb-4"
-                >
-                  <h3 className="text-xs font-bold mb-3 tracking-widest"
-                    style={{ color: "#8B949E", fontFamily: "JetBrains Mono" }}>
-                    COLOR
-                  </h3>
+                <div className="mb-6">
+                  <h3 className="text-sm font-bold text-gray-700 mb-3">Select Color</h3>
                   <div className="flex gap-2 flex-wrap">
                     {product.colors.map((color, i) => (
-                      <motion.button
+                      <button
                         key={i}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
                         onClick={() => setSelectedColor(color)}
-                        className="px-4 py-2 rounded-xl text-sm font-semibold"
-                        style={{
-                          background: selectedColor === color
-                            ? "linear-gradient(135deg, #58A6FF, #00FFB3)"
-                            : "transparent",
-                          color: selectedColor === color ? "#000" : "#8B949E",
-                          border: `1px solid ${selectedColor === color ? "transparent" : "#30363D"}`,
-                        }}
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${selectedColor === color ? "bg-teal-600 text-white shadow-md" : "bg-slate-50 text-gray-600 border border-gray-200 hover:bg-slate-100"}`}
                       >
                         {color}
-                      </motion.button>
+                      </button>
                     ))}
                   </div>
-                </motion.div>
+                </div>
               )}
 
               {product.sizes?.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  className="mb-6"
-                >
-                  <h3 className="text-xs font-bold mb-3 tracking-widest"
-                    style={{ color: "#8B949E", fontFamily: "JetBrains Mono" }}>
-                    SIZE
-                  </h3>
+                <div className="mb-6">
+                  <h3 className="text-sm font-bold text-gray-700 mb-3">Select Size</h3>
                   <div className="flex gap-2 flex-wrap">
                     {product.sizes.map((size, i) => (
-                      <motion.button
+                      <button
                         key={i}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
                         onClick={() => setSelectedSize(size)}
-                        className="w-12 h-12 rounded-xl text-sm font-bold"
-                        style={{
-                          background: selectedSize === size
-                            ? "linear-gradient(135deg, #58A6FF, #00FFB3)"
-                            : "transparent",
-                          color: selectedSize === size ? "#000" : "#8B949E",
-                          border: `1px solid ${selectedSize === size ? "transparent" : "#30363D"}`,
-                        }}
+                        className={`w-12 h-12 rounded-lg text-sm font-bold transition flex items-center justify-center ${selectedSize === size ? "bg-teal-600 text-white shadow-md" : "bg-slate-50 text-gray-600 border border-gray-200 hover:bg-slate-100"}`}
                       >
                         {size}
-                      </motion.button>
+                      </button>
                     ))}
                   </div>
-                </motion.div>
+                </div>
               )}
 
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.6 }}
-                className="flex items-center gap-4 mb-6"
-              >
-                <h3 className="text-xs font-bold tracking-widest"
-                  style={{ color: "#8B949E", fontFamily: "JetBrains Mono" }}>
-                  QTY
-                </h3>
-                <div className="flex items-center rounded-xl overflow-hidden"
-                  style={{ border: "1px solid #30363D" }}>
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
+              <div className="flex items-center gap-4 mb-6">
+                <h3 className="text-sm font-bold text-gray-700">Quantity</h3>
+                <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden">
+                  <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="px-4 py-2 text-lg font-bold"
-                    style={{ color: "#58A6FF", background: "#1C2128" }}
+                    className="px-4 py-2 bg-slate-50 text-gray-600 hover:bg-slate-100 font-bold transition"
                   >
                     −
-                  </motion.button>
-                  <span className="px-6 py-2 font-bold"
-                    style={{ color: "#FFFFFF", background: "#161B22" }}>
+                  </button>
+                  <span className="px-6 py-2 font-bold text-gray-900 border-x border-gray-200">
                     {quantity}
                   </span>
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
+                  <button
                     onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                    className="px-4 py-2 text-lg font-bold"
-                    style={{ color: "#58A6FF", background: "#1C2128" }}
+                    className="px-4 py-2 bg-slate-50 text-gray-600 hover:bg-slate-100 font-bold transition"
                   >
                     +
-                  </motion.button>
+                  </button>
                 </div>
-              </motion.div>
+              </div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
-                className="flex flex-col gap-3"
-              >
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+              <div className="flex flex-col gap-3 mt-auto pt-4">
+                <button
                   onClick={addToCart}
                   disabled={product.stock === 0}
-                  className="w-full py-4 rounded-2xl text-base font-bold"
-                  style={{
-                    background: addedToCart ? "rgba(0,255,179,0.2)" : "rgba(88,166,255,0.1)",
-                    border: `1px solid ${addedToCart ? "#00FFB3" : "#58A6FF"}`,
-                    color: addedToCart ? "#00FFB3" : "#58A6FF",
-                    opacity: product.stock === 0 ? 0.5 : 1,
-                  }}
+                  className={`w-full py-3 md:py-4 rounded-xl text-sm md:text-base font-bold transition flex items-center justify-center gap-2 ${addedToCart ? "bg-green-500 text-white" : "bg-teal-50 text-teal-600 border border-teal-200 hover:bg-teal-100"} ${product.stock === 0 && "opacity-50 cursor-not-allowed"}`}
                 >
                   {addedToCart ? "✓ Added to Cart!" : "🛒 Add to Cart"}
-                </motion.button>
+                </button>
 
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                <button
                   onClick={() => { addToCart(); navigate("/cart"); }}
                   disabled={product.stock === 0}
-                  className="cyber-btn w-full py-4 rounded-2xl text-base font-bold"
-                  style={{ opacity: product.stock === 0 ? 0.5 : 1 }}
+                  className={`w-full py-3 md:py-4 rounded-xl text-sm md:text-base font-bold text-white shadow-md transition flex items-center justify-center gap-2 ${product.stock === 0 ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-teal-500 to-teal-400 hover:from-teal-600 hover:to-teal-500"}`}
                 >
                   ⚡ Buy Now
-                </motion.button>
-              </motion.div>
+                </button>
+              </div>
 
               <div className="mt-8">
-                <div className="flex gap-1 p-1 rounded-xl mb-4"
-                  style={{ background: "#1C2128" }}>
+                <div className="flex gap-2 mb-4 border-b border-gray-200">
                   {["details", "specs"].map((tab) => (
-                    <motion.button
+                    <button
                       key={tab}
-                      whileTap={{ scale: 0.95 }}
                       onClick={() => setActiveTab(tab)}
-                      className="flex-1 py-2 rounded-lg text-xs font-bold capitalize"
-                      style={{
-                        background: activeTab === tab
-                          ? "linear-gradient(135deg, #58A6FF, #00FFB3)"
-                          : "transparent",
-                        color: activeTab === tab ? "#000" : "#8B949E",
-                      }}
+                      className={`px-4 py-2 text-sm font-bold capitalize transition-colors ${activeTab === tab ? "text-teal-600 border-b-2 border-teal-600" : "text-gray-500 hover:text-gray-700"}`}
                     >
                       {tab}
-                    </motion.button>
+                    </button>
                   ))}
                 </div>
 
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                  >
+                <div className="min-h-[100px]">
+                  <AnimatePresence mode="wait">
                     {activeTab === "details" && (
-                      <p className="text-sm leading-relaxed" style={{ color: "#8B949E" }}>
+                      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-sm text-gray-600 leading-relaxed">
                         {product.description || "No description available."}
-                      </p>
+                      </motion.p>
                     )}
                     {activeTab === "specs" && (
-                      <div className="space-y-2">
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
                         {[
                           { label: "Category", value: product.category },
                           { label: "Stock",    value: `${product.stock} units` },
                           { label: "Colors",   value: product.colors?.join(", ") || "N/A" },
                           { label: "Sizes",    value: product.sizes?.join(", ")  || "N/A" },
                         ].map((spec) => (
-                          <div key={spec.label}
-                            className="flex justify-between py-2"
-                            style={{ borderBottom: "1px solid #30363D" }}>
-                            <span className="text-xs font-semibold" style={{ color: "#8B949E" }}>
-                              {spec.label}
-                            </span>
-                            <span className="text-xs font-bold" style={{ color: "#FFFFFF" }}>
-                              {spec.value}
-                            </span>
+                          <div key={spec.label} className="flex justify-between items-center bg-slate-50 p-2 rounded-lg">
+                            <span className="text-xs font-semibold text-gray-500">{spec.label}</span>
+                            <span className="text-xs font-bold text-gray-800">{spec.value}</span>
                           </div>
                         ))}
-                      </div>
+                      </motion.div>
                     )}
-                  </motion.div>
-                </AnimatePresence>
+                  </AnimatePresence>
+                </div>
               </div>
 
             </div>
           </div>
-
-          {/* AI Recommendations */}
-          <AIRecommendations currentProduct={product} />
         </div>
-      </div>
 
-      {/* Reviews Section */}
-      <div className="max-w-6xl mx-auto px-6 pb-10">
-        <div className="rounded-3xl p-8"
-          style={{ background: "#161B22", border: "1px solid #30363D" }}>
+        {/* AI Recommendations */}
+        <AIRecommendations currentProduct={product} />
+
+        {/* Reviews Section */}
+        <div className="mt-8 bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
           <ReviewSection
             productId={product._id}
             userId={user?._id}
             userName={user?.name}
           />
         </div>
-      </div>
 
+      </div>
     </div>
   );
 }

@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 function Orders() {
   const [cartItems, setCartItems] = useState([]);
   const [address, setAddress] = useState({
@@ -17,7 +19,7 @@ function Orders() {
   const getCart = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/cart", {
+      const res = await axios.get(`${API}/api/cart`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCartItems(res.data);
@@ -41,17 +43,17 @@ function Orders() {
       setLoading(true);
       const token = localStorage.getItem("token");
       const orderItems = cartItems.map((item) => ({
-        product: item.product._id,
+        productId: item.product._id,
         quantity: item.quantity,
       }));
       await axios.post(
-        "http://localhost:5000/api/orders/create",
+        `${API}/api/orders/create`,
         { orderItems, totalPrice, paymentMethod: "COD", address },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       for (const item of cartItems) {
         await axios.delete(
-          `http://localhost:5000/api/cart/${item._id}`,
+          `${API}/api/cart/${item._id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
       }
@@ -68,22 +70,18 @@ function Orders() {
   // ── Order Success ──
   if (orderPlaced) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center particle-bg"
-        style={{ background: "#0D1117" }}
-      >
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <motion.div
-          initial={{ scale: 0, opacity: 0 }}
+          initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", bounce: 0.4 }}
-          className="text-center p-12 rounded-3xl max-w-md w-full mx-4"
-          style={{ background: "#161B22", border: "1px solid #30363D" }}
+          className="text-center p-8 md:p-12 rounded-3xl max-w-md w-full bg-white shadow-xl border border-gray-100"
         >
           {/* Success Animation */}
           <motion.div
             animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="text-8xl mb-6"
+            className="text-7xl md:text-8xl mb-6"
           >
             🎉
           </motion.div>
@@ -92,7 +90,7 @@ function Orders() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-3xl font-black mb-3 gradient-text"
+            className="text-2xl md:text-3xl font-black mb-3 text-teal-600"
           >
             Order Placed!
           </motion.h1>
@@ -101,8 +99,7 @@ function Orders() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="text-sm mb-2"
-            style={{ color: "#8B949E" }}
+            className="text-gray-500 font-medium mb-1"
           >
             Thank you for shopping at
           </motion.p>
@@ -111,10 +108,9 @@ function Orders() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="font-black tracking-widest mb-6"
-            style={{ color: "#00FFB3", fontFamily: "JetBrains Mono" }}
+            className="font-black tracking-widest text-gray-900 mb-8 uppercase"
           >
-            AHNAF ENTERPRISES
+            Ahnaf & Co
           </motion.p>
 
           {/* Order Details */}
@@ -122,8 +118,7 @@ function Orders() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="p-4 rounded-2xl mb-8"
-            style={{ background: "#1C2128", border: "1px solid #30363D" }}
+            className="p-4 rounded-2xl mb-8 bg-slate-50 border border-gray-200"
           >
             {[
               { label: "Payment", value: "Cash on Delivery 💵" },
@@ -132,16 +127,12 @@ function Orders() {
             ].map((item) => (
               <div
                 key={item.label}
-                className="flex justify-between py-2"
-                style={{ borderBottom: "1px solid #30363D" }}
+                className="flex justify-between py-2 border-b border-gray-200 last:border-0"
               >
-                <span className="text-sm" style={{ color: "#8B949E" }}>
+                <span className="text-sm font-semibold text-gray-500">
                   {item.label}
                 </span>
-                <span
-                  className="text-sm font-bold"
-                  style={{ color: "#FFFFFF" }}
-                >
+                <span className="text-sm font-bold text-gray-900">
                   {item.value}
                 </span>
               </div>
@@ -158,7 +149,7 @@ function Orders() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate("/home")}
-              className="cyber-btn w-full py-4 rounded-2xl font-black"
+              className="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-teal-500 to-teal-400 shadow-md"
             >
               Continue Shopping 🛍️
             </motion.button>
@@ -166,120 +157,85 @@ function Orders() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate("/myorders")}
-              className="w-full py-4 rounded-2xl font-bold text-sm"
-              style={{
-                border: "1px solid #30363D",
-                color: "#8B949E",
-                background: "transparent",
-              }}
+              className="w-full py-4 rounded-xl font-bold text-gray-600 bg-white border border-gray-200 hover:bg-slate-50"
             >
               View My Orders 📦
             </motion.button>
           </motion.div>
-
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#0D1117" }}>
+    <div className="min-h-screen bg-slate-50 font-sans pb-20">
 
       {/* ── Navbar ── */}
-      <motion.nav
-        initial={{ y: -80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="sticky top-0 z-50 px-6 py-4 flex items-center gap-4"
-        style={{
-          background: "rgba(13,17,23,0.95)",
-          backdropFilter: "blur(20px)",
-          borderBottom: "1px solid #30363D",
-        }}
-      >
-        <motion.button
-          whileHover={{ scale: 1.05 }}
+      <nav className="bg-gradient-to-r from-teal-400 to-teal-300 p-3 md:p-4 sticky top-0 z-50 shadow-sm flex items-center justify-between relative">
+        <button
           onClick={() => navigate("/cart")}
-          className="px-4 py-2 rounded-xl text-sm font-semibold"
-          style={{ border: "1px solid #30363D", color: "#8B949E" }}
+          className="px-3 md:px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-bold transition flex items-center whitespace-nowrap z-10"
         >
           ← Back
-        </motion.button>
-        <motion.span
-          animate={{ rotate: 360 }}
-          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-          className="text-2xl"
-        >
-          🛍️
-        </motion.span>
-        <span
-          className="font-black tracking-widest gradient-text flex-1"
-          style={{ fontFamily: "JetBrains Mono" }}
-        >
-          AHNAF ENTERPRISES
-        </span>
-      </motion.nav>
+        </button>
 
-      <div className="max-w-5xl mx-auto px-6 py-8">
-
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-black mb-8"
+        <div 
+          onClick={() => navigate("/")}
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 cursor-pointer z-0"
         >
+          <span className="text-xl md:text-2xl">🛍️</span>
+          <span className="font-black text-lg md:text-xl text-white tracking-wider whitespace-nowrap">
+            Ahnaf & Co
+          </span>
+        </div>
+      </nav>
+
+      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
+
+        <h1 className="text-2xl md:text-3xl font-black text-gray-900 mb-8 text-center md:text-left">
           📦 Checkout
-        </motion.h1>
+        </h1>
 
         {/* ── Step Indicator ── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-center mb-10"
+          className="flex items-center justify-center mb-10 overflow-x-auto pb-4"
         >
           {steps.map((s, i) => (
             <div key={s} className="flex items-center">
-              <motion.div
-                whileHover={{ scale: 1.1 }}
-                className="flex flex-col items-center"
-              >
+              <div className="flex flex-col items-center">
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm mb-1"
-                  style={{
-                    background: step > i + 1
-                      ? "linear-gradient(135deg, #58A6FF, #00FFB3)"
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm mb-2 transition-all ${
+                    step > i + 1
+                      ? "bg-teal-500 text-white shadow-md"
                       : step === i + 1
-                      ? "linear-gradient(135deg, #58A6FF, #00FFB3)"
-                      : "#1C2128",
-                    color: step >= i + 1 ? "#000" : "#8B949E",
-                    border: step < i + 1 ? "1px solid #30363D" : "none",
-                  }}
+                      ? "bg-teal-500 text-white shadow-md"
+                      : "bg-white text-gray-400 border border-gray-200"
+                  }`}
                 >
                   {step > i + 1 ? "✓" : i + 1}
                 </div>
                 <span
-                  className="text-xs font-semibold"
-                  style={{
-                    color: step >= i + 1 ? "#58A6FF" : "#8B949E",
-                    fontFamily: "JetBrains Mono",
-                  }}
+                  className={`text-xs font-bold uppercase tracking-wider ${
+                    step >= i + 1 ? "text-teal-600" : "text-gray-400"
+                  }`}
                 >
                   {s}
                 </span>
-              </motion.div>
+              </div>
               {i < steps.length - 1 && (
                 <div
-                  className="w-20 h-px mx-2 mb-5"
-                  style={{
-                    background: step > i + 1
-                      ? "linear-gradient(90deg, #58A6FF, #00FFB3)"
-                      : "#30363D",
-                  }}
+                  className={`w-12 md:w-24 h-1 mx-2 md:mx-4 mb-6 rounded-full transition-all ${
+                    step > i + 1 ? "bg-teal-500" : "bg-gray-200"
+                  }`}
                 />
               )}
             </div>
           ))}
         </motion.div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
 
           {/* ── Left — Steps ── */}
           <div className="flex-1">
@@ -289,69 +245,58 @@ function Orders() {
               {step === 1 && (
                 <motion.div
                   key="step1"
-                  initial={{ opacity: 0, x: -30 }}
+                  initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 30 }}
-                  className="p-6 rounded-2xl"
-                  style={{
-                    background: "#161B22",
-                    border: "1px solid #30363D",
-                  }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="p-5 md:p-8 bg-white rounded-3xl shadow-sm border border-gray-200"
                 >
-                  <h2
-                    className="text-lg font-black mb-6 tracking-widest"
-                    style={{ fontFamily: "JetBrains Mono" }}
-                  >
-                    📍 DELIVERY ADDRESS
+                  <h2 className="text-base font-black mb-6 tracking-widest text-gray-500 uppercase flex items-center gap-2">
+                    <span>📍</span> Delivery Address
                   </h2>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {[
-                      { name: "fullName", label: "FULL NAME", placeholder: "Mohamed Ahnaf" },
-                      { name: "phone", label: "PHONE", placeholder: "+91 9876543210" },
-                      { name: "street", label: "STREET ADDRESS", placeholder: "123 Main Street", full: true },
-                      { name: "city", label: "CITY", placeholder: "Chennai" },
-                      { name: "state", label: "STATE", placeholder: "Tamil Nadu" },
-                      { name: "pincode", label: "PINCODE", placeholder: "600001" },
+                      { name: "fullName", label: "Full Name", placeholder: "Mohamed Ahnaf" },
+                      { name: "phone", label: "Phone Number", placeholder: "+91 9876543210" },
+                      { name: "street", label: "Street Address", placeholder: "123 Main Street", full: true },
+                      { name: "city", label: "City", placeholder: "Chennai" },
+                      { name: "state", label: "State", placeholder: "Tamil Nadu" },
+                      { name: "pincode", label: "Pincode", placeholder: "600001" },
                     ].map((field) => (
                       <div
                         key={field.name}
                         className={field.full ? "md:col-span-2" : ""}
                       >
-                        <label
-                          className="text-xs font-bold mb-2 block tracking-widest"
-                          style={{ color: "#8B949E", fontFamily: "JetBrains Mono" }}
-                        >
+                        <label className="text-xs font-bold mb-2 block text-gray-600 uppercase tracking-wider">
                           {field.label}
                         </label>
                         <input
                           type="text"
                           name={field.name}
                           placeholder={field.placeholder}
+                          value={address[field.name]}
                           onChange={handleChange}
-                          className="dark-input"
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition font-medium"
                           required
                         />
                       </div>
                     ))}
                   </div>
 
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                  <button
                     onClick={() => {
                       if (!address.fullName || !address.phone ||
                           !address.street || !address.city ||
                           !address.state || !address.pincode) {
-                        alert("All fields fill pannu! ⚠️");
+                        alert("All fields are required! ⚠️");
                         return;
                       }
                       setStep(2);
                     }}
-                    className="cyber-btn w-full py-4 rounded-2xl font-black mt-6"
+                    className="w-full py-4 rounded-xl text-white font-bold mt-8 bg-gradient-to-r from-teal-500 to-teal-400 hover:from-teal-600 hover:to-teal-500 shadow-md transition"
                   >
                     Continue → Review Order
-                  </motion.button>
+                  </button>
 
                 </motion.div>
               )}
@@ -360,89 +305,68 @@ function Orders() {
               {step === 2 && (
                 <motion.div
                   key="step2"
-                  initial={{ opacity: 0, x: -30 }}
+                  initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 30 }}
-                  className="p-6 rounded-2xl"
-                  style={{
-                    background: "#161B22",
-                    border: "1px solid #30363D",
-                  }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="p-5 md:p-8 bg-white rounded-3xl shadow-sm border border-gray-200"
                 >
-                  <h2
-                    className="text-lg font-black mb-6 tracking-widest"
-                    style={{ fontFamily: "JetBrains Mono" }}
-                  >
-                    🧾 ORDER REVIEW
+                  <h2 className="text-base font-black mb-6 tracking-widest text-gray-500 uppercase flex items-center gap-2">
+                    <span>🧾</span> Order Review
                   </h2>
 
                   {/* Address Summary */}
-                  <div
-                    className="p-4 rounded-2xl mb-6"
-                    style={{ background: "#1C2128", border: "1px solid #30363D" }}
-                  >
-                    <p
-                      className="text-xs font-bold mb-2 tracking-widest"
-                      style={{ color: "#58A6FF", fontFamily: "JetBrains Mono" }}
-                    >
-                      📍 DELIVERING TO
+                  <div className="p-5 rounded-2xl mb-6 bg-slate-50 border border-gray-100">
+                    <p className="text-[10px] font-bold mb-3 tracking-widest text-teal-600 uppercase">
+                      📍 Delivering To
                     </p>
-                    <p className="font-bold">{address.fullName}</p>
-                    <p className="text-sm" style={{ color: "#8B949E" }}>
+                    <p className="font-bold text-gray-900 mb-1">{address.fullName}</p>
+                    <p className="text-sm text-gray-600 mb-2">
                       {address.street}, {address.city}, {address.state} - {address.pincode}
                     </p>
-                    <p className="text-sm" style={{ color: "#8B949E" }}>
+                    <p className="text-sm font-semibold text-gray-700">
                       📞 {address.phone}
                     </p>
                   </div>
 
                   {/* Items */}
-                  {cartItems.map((item) => (
-                    <div
-                      key={item._id}
-                      className="flex items-center gap-4 mb-3 pb-3"
-                      style={{ borderBottom: "1px solid #30363D" }}
-                    >
-                      <img
-                        src={item.product?.images?.[0] || "https://via.placeholder.com/60"}
-                        className="w-14 h-14 object-cover rounded-xl"
-                        style={{ border: "1px solid #30363D" }}
-                      />
-                      <div className="flex-1">
-                        <p className="font-bold text-sm">
-                          {item.product?.title}
-                        </p>
-                        <p className="text-xs" style={{ color: "#8B949E" }}>
-                          Qty: {item.quantity}
-                        </p>
+                  <div className="space-y-4">
+                    {cartItems.map((item) => (
+                      <div
+                        key={item._id}
+                        className="flex flex-wrap items-center gap-4 pb-4 border-b border-gray-100 last:border-0 last:pb-0"
+                      >
+                        <img
+                          src={item.product?.images?.[0] || "https://via.placeholder.com/60"}
+                          className="w-16 h-16 object-cover rounded-xl border border-gray-200"
+                        />
+                        <div className="flex-1">
+                          <p className="font-bold text-sm text-gray-900">
+                            {item.product?.title}
+                          </p>
+                          <p className="text-xs font-semibold text-gray-500 mt-1">
+                            Qty: {item.quantity} × ₹{item.product?.price}
+                          </p>
+                        </div>
+                        <span className="font-black text-gray-900 text-lg">
+                          ₹{(item.product?.price || 0) * item.quantity}
+                        </span>
                       </div>
-                      <span className="font-black gradient-text">
-                        ₹{(item.product?.price || 0) * item.quantity}
-                      </span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
 
-                  <div className="flex gap-3 mt-6">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
+                  <div className="flex flex-col sm:flex-row gap-3 mt-8">
+                    <button
                       onClick={() => setStep(1)}
-                      className="flex-1 py-4 rounded-2xl font-bold text-sm"
-                      style={{
-                        border: "1px solid #30363D",
-                        color: "#8B949E",
-                        background: "transparent",
-                      }}
+                      className="flex-1 py-4 rounded-xl font-bold text-gray-600 bg-white border border-gray-200 hover:bg-slate-50 transition"
                     >
                       ← Edit Address
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                    </button>
+                    <button
                       onClick={() => setStep(3)}
-                      className="cyber-btn flex-1 py-4 rounded-2xl font-black"
+                      className="flex-1 py-4 rounded-xl text-white font-bold bg-gradient-to-r from-teal-500 to-teal-400 hover:from-teal-600 hover:to-teal-500 shadow-md transition"
                     >
-                      Confirm →
-                    </motion.button>
+                      Confirm Details →
+                    </button>
                   </div>
 
                 </motion.div>
@@ -452,103 +376,64 @@ function Orders() {
               {step === 3 && (
                 <motion.div
                   key="step3"
-                  initial={{ opacity: 0, x: -30 }}
+                  initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 30 }}
-                  className="p-6 rounded-2xl"
-                  style={{
-                    background: "#161B22",
-                    border: "1px solid #30363D",
-                  }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="p-5 md:p-8 bg-white rounded-3xl shadow-sm border border-gray-200"
                 >
-                  <h2
-                    className="text-lg font-black mb-6 tracking-widest"
-                    style={{ fontFamily: "JetBrains Mono" }}
-                  >
-                    💵 PAYMENT METHOD
+                  <h2 className="text-base font-black mb-6 tracking-widest text-gray-500 uppercase flex items-center gap-2">
+                    <span>💵</span> Payment Method
                   </h2>
 
                   {/* COD Option */}
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="p-5 rounded-2xl mb-6 cursor-pointer"
-                    style={{
-                      background: "rgba(0,255,179,0.05)",
-                      border: "2px solid #00FFB3",
-                    }}
-                  >
+                  <div className="p-5 rounded-2xl mb-6 bg-teal-50 border-2 border-teal-500 cursor-pointer flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <span className="text-4xl">💵</span>
+                      <span className="text-3xl md:text-4xl">💵</span>
                       <div>
-                        <h3
-                          className="font-black"
-                          style={{ color: "#00FFB3" }}
-                        >
+                        <h3 className="font-black text-teal-700">
                           Cash on Delivery
                         </h3>
-                        <p className="text-sm" style={{ color: "#8B949E" }}>
+                        <p className="text-xs font-semibold text-teal-600 mt-1">
                           Pay when your order arrives!
                         </p>
                       </div>
-                      <div
-                        className="ml-auto w-6 h-6 rounded-full flex items-center justify-center"
-                        style={{ background: "#00FFB3" }}
-                      >
-                        <span className="text-xs font-black text-black">✓</span>
-                      </div>
                     </div>
-                  </motion.div>
+                    <div className="w-6 h-6 rounded-full bg-teal-500 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                      ✓
+                    </div>
+                  </div>
 
                   {/* Total */}
-                  <div
-                    className="p-4 rounded-2xl mb-6 flex justify-between items-center"
-                    style={{ background: "#1C2128" }}
-                  >
-                    <span
-                      className="font-black tracking-widest"
-                      style={{ fontFamily: "JetBrains Mono" }}
-                    >
-                      TOTAL
+                  <div className="p-5 rounded-2xl mb-8 flex justify-between items-center bg-slate-50 border border-gray-100">
+                    <span className="font-black text-gray-500 tracking-widest uppercase">
+                      Total Amount
                     </span>
-                    <span className="text-3xl font-black gradient-text">
+                    <span className="text-2xl md:text-3xl font-black text-gray-900">
                       ₹{totalPrice}
                     </span>
                   </div>
 
-                  <div className="flex gap-3">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
                       onClick={() => setStep(2)}
-                      className="flex-1 py-4 rounded-2xl font-bold text-sm"
-                      style={{
-                        border: "1px solid #30363D",
-                        color: "#8B949E",
-                        background: "transparent",
-                      }}
+                      className="flex-1 py-4 rounded-xl font-bold text-gray-600 bg-white border border-gray-200 hover:bg-slate-50 transition"
                     >
                       ← Back
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                    </button>
+                    <button
                       onClick={placeOrder}
                       disabled={loading}
-                      className="cyber-btn flex-1 py-4 rounded-2xl font-black"
+                      className="flex-1 py-4 rounded-xl text-white font-bold bg-gradient-to-r from-teal-500 to-teal-400 hover:from-teal-600 hover:to-teal-500 shadow-md transition disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                     >
                       {loading ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <motion.span
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity }}
-                          >
-                            ⟳
-                          </motion.span>
+                        <>
+                          <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
                           Placing...
-                        </span>
+                        </>
                       ) : (
                         "Place Order 🚀"
                       )}
-                    </motion.button>
+                    </button>
                   </div>
 
                 </motion.div>
@@ -559,63 +444,41 @@ function Orders() {
 
           {/* ── Right — Mini Summary ── */}
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
+            initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="lg:w-72"
+            transition={{ delay: 0.2 }}
+            className="lg:w-80"
           >
-            <div
-              className="rounded-2xl p-5 sticky top-24"
-              style={{
-                background: "#161B22",
-                border: "1px solid #30363D",
-              }}
-            >
-              <h3
-                className="text-sm font-black mb-4 tracking-widest"
-                style={{ fontFamily: "JetBrains Mono" }}
-              >
-                CART SUMMARY
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-200 p-6 sticky top-24">
+              <h3 className="text-sm font-black mb-6 tracking-widest text-gray-500 uppercase">
+                Cart Summary
               </h3>
-              {cartItems.map((item) => (
-                <div
-                  key={item._id}
-                  className="flex items-center gap-3 mb-3"
-                >
-                  <img
-                    src={item.product?.images?.[0] || "https://via.placeholder.com/40"}
-                    className="w-10 h-10 object-cover rounded-lg"
-                  />
-                  <div className="flex-1">
-                    <p
-                      className="text-xs font-semibold line-clamp-1"
-                      style={{ color: "#FFFFFF" }}
-                    >
-                      {item.product?.title}
-                    </p>
-                    <p className="text-xs" style={{ color: "#8B949E" }}>
-                      x{item.quantity}
-                    </p>
+              <div className="space-y-4">
+                {cartItems.map((item) => (
+                  <div key={item._id} className="flex items-center gap-3">
+                    <img
+                      src={item.product?.images?.[0] || "https://via.placeholder.com/40"}
+                      className="w-12 h-12 object-cover rounded-xl border border-gray-100"
+                    />
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-gray-900 line-clamp-1">
+                        {item.product?.title}
+                      </p>
+                      <p className="text-[10px] font-semibold text-gray-500 mt-0.5">
+                        Qty: {item.quantity}
+                      </p>
+                    </div>
+                    <span className="text-xs font-black text-gray-900">
+                      ₹{(item.product?.price || 0) * item.quantity}
+                    </span>
                   </div>
-                  <span
-                    className="text-xs font-black"
-                    style={{ color: "#00FFB3" }}
-                  >
-                    ₹{(item.product?.price || 0) * item.quantity}
-                  </span>
-                </div>
-              ))}
-              <div
-                className="mt-4 pt-4 flex justify-between"
-                style={{ borderTop: "1px solid #30363D" }}
-              >
-                <span
-                  className="font-black text-sm"
-                  style={{ fontFamily: "JetBrains Mono" }}
-                >
-                  TOTAL
+                ))}
+              </div>
+              <div className="mt-6 pt-5 flex justify-between items-center border-t border-gray-100">
+                <span className="font-black text-sm text-gray-500 tracking-widest uppercase">
+                  Total
                 </span>
-                <span className="font-black gradient-text">₹{totalPrice}</span>
+                <span className="font-black text-xl text-gray-900">₹{totalPrice}</span>
               </div>
             </div>
           </motion.div>

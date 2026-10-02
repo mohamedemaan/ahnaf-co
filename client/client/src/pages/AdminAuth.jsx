@@ -1,45 +1,25 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
-const API = import.meta.env.VITE_API_URL;
+const API = 'http://localhost:5000';
 
 export default function AdminAuth() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState('login');
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    fullName: '', username: '', email: '', password: '',
-  });
+  const [form, setForm] = useState({ username: '', password: '', email: '' });
 
   const update = (key, value) => setForm(p => ({ ...p, [key]: value }));
 
-  const handleRegister = async () => {
-    if (!form.fullName || !form.username || !form.email || !form.password) {
-      alert('All fields required!'); return;
-    }
-    setLoading(true);
-    try {
-      await axios.post(`${API}/api/admin-auth/register`, form);
-      alert('Admin registered! Please login. 🎉');
-      setMode('login');
-      setForm({ fullName: '', username: '', email: '', password: '' });
-    } catch (err) {
-      alert(err.response?.data?.message || 'Registration failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogin = async () => {
-    if (!form.username || !form.password) {
-      alert('Username & Password required!'); return;
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    if (!form.email || !form.password) {
+      alert('Email & Password required!'); return;
     }
     setLoading(true);
     try {
       const { data } = await axios.post(`${API}/api/admin-auth/login`, {
-        username: form.username,
+        email: form.email,
         password: form.password,
       });
       localStorage.setItem('adminToken', data.token);
@@ -56,127 +36,79 @@ export default function AdminAuth() {
     }
   };
 
-  const inputStyle = {
-    width: '100%', padding: '12px 16px', borderRadius: '10px',
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(48,54,61,0.8)',
-    color: '#fff', fontSize: '14px', outline: 'none',
-    boxSizing: 'border-box', marginBottom: '14px',
-  };
-
-  const labelStyle = {
-    color: '#8B949E', fontSize: '11px', fontWeight: '700',
-    letterSpacing: '1px', display: 'block', marginBottom: '6px',
-  };
-
-  const btnPrimary = {
-    width: '100%', padding: '14px', borderRadius: '12px',
-    border: 'none', cursor: 'pointer',
-    background: 'linear-gradient(135deg, #58A6FF, #00FFB3)',
-    color: '#000', fontWeight: '800', fontSize: '14px', marginTop: '6px',
-  };
-
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center',
-      justifyContent: 'center', background: '#0D1117', padding: '20px',
-    }}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        style={{
-          width: '100%', maxWidth: '420px', borderRadius: '24px',
-          background: '#161B22', border: '1px solid rgba(88,166,255,0.2)',
-          padding: '36px', boxShadow: '0 40px 80px rgba(0,0,0,0.4)',
-        }}
-      >
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <div style={{ fontSize: '40px', marginBottom: '8px' }}>🛍️</div>
-          <h1 style={{ color: '#58A6FF', fontWeight: '900', fontSize: '18px',
-            letterSpacing: '2px', fontFamily: 'JetBrains Mono' }}>
-            EMMANSTORE
-          </h1>
-          <p style={{ color: '#555', fontSize: '13px', marginTop: '4px' }}>
-            Admin Panel — {mode === 'login' ? 'Login' : 'Register'}
-          </p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4 font-sans pb-24 md:pb-4">
+      
+      {/* Brand Header */}
+      <div className="flex justify-center items-center mb-8 gap-3">
+        <span className="text-5xl drop-shadow-md">🛍️</span>
+        <h1 className="text-4xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 drop-shadow-sm">Ahnaf & Co</h1>
+      </div>
+
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+        
+        {/* Header Section */}
+        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 text-center text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
+          <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-20 h-20 bg-blue-400 opacity-20 rounded-full blur-lg"></div>
+          
+          <h1 className="text-3xl font-black tracking-tight mb-2 relative z-10">Admin Portal</h1>
+          <p className="text-blue-100 text-sm font-medium relative z-10">Sign in to manage your enterprise</p>
         </div>
 
-        {/* Mode Switch */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px',
-          background: 'rgba(255,255,255,0.03)', borderRadius: '12px', padding: '4px' }}>
-          {['login', 'register'].map(m => (
-            <button key={m} onClick={() => setMode(m)}
-              style={{
-                flex: 1, padding: '10px', borderRadius: '10px', border: 'none',
-                cursor: 'pointer', fontWeight: '700', fontSize: '13px',
-                background: mode === m
-                  ? 'linear-gradient(135deg, #58A6FF, #00FFB3)'
-                  : 'transparent',
-                color: mode === m ? '#000' : '#8B949E',
-              }}>
-              {m === 'login' ? '🔑 Login' : '📝 Register'}
+        {/* Form Section */}
+        <div className="p-8">
+          <form className="space-y-5" onSubmit={handleLogin}>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-1">Admin Email</label>
+              <div className="relative">
+                <span className="absolute left-3 top-3 text-slate-400">✉️</span>
+                <input 
+                  type="email" 
+                  value={form.email}
+                  onChange={e => update('email', e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-slate-700 font-medium"
+                  placeholder="admin@ahnaf.com"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-1">Password</label>
+              <div className="relative">
+                <span className="absolute left-3 top-3 text-slate-400">🔒</span>
+                <input 
+                  type="password" 
+                  value={form.password}
+                  onChange={e => update('password', e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-slate-700 font-medium"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="w-full py-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:shadow-blue-600/50 hover:-translate-y-0.5 transition-all active:translate-y-0 mt-6 disabled:opacity-50"
+            >
+              {loading ? 'Processing...' : 'Sign In'}
             </button>
-          ))}
+            
+          </form>
+
+          {/* Footer */}
+          <div className="mt-8 text-center">
+            <Link to="/" className="text-sm font-bold text-slate-500 hover:text-blue-600 transition-colors">
+              ← Back to Store
+            </Link>
+          </div>
         </div>
 
-        {/* Register Form */}
-        {mode === 'register' && (
-          <>
-            <label style={labelStyle}>FULL NAME</label>
-            <input style={inputStyle} value={form.fullName}
-              onChange={e => update('fullName', e.target.value)}
-              placeholder="John Doe" />
-
-            <label style={labelStyle}>USERNAME</label>
-            <input style={inputStyle} value={form.username}
-              onChange={e => update('username', e.target.value)}
-              placeholder="admin123" />
-
-            <label style={labelStyle}>EMAIL</label>
-            <input style={inputStyle} type="email" value={form.email}
-              onChange={e => update('email', e.target.value)}
-              placeholder="admin@emmanstore.com" />
-
-            <label style={labelStyle}>PASSWORD</label>
-            <input style={inputStyle} type="password" value={form.password}
-              onChange={e => update('password', e.target.value)}
-              placeholder="••••••••" />
-
-            <motion.button whileHover={{ scale: 1.02 }}
-              disabled={loading} onClick={handleRegister} style={btnPrimary}>
-              {loading ? '⏳ Registering...' : '✅ Register'}
-            </motion.button>
-          </>
-        )}
-
-        {/* Login Form */}
-        {mode === 'login' && (
-          <>
-            <label style={labelStyle}>USERNAME</label>
-            <input style={inputStyle} value={form.username}
-              onChange={e => update('username', e.target.value)}
-              placeholder="admin123" />
-
-            <label style={labelStyle}>PASSWORD</label>
-            <input style={inputStyle} type="password" value={form.password}
-              onChange={e => update('password', e.target.value)}
-              placeholder="••••••••" />
-
-            <motion.button whileHover={{ scale: 1.02 }}
-              disabled={loading} onClick={handleLogin} style={btnPrimary}>
-              {loading ? '⏳ Logging in...' : '🔑 Login'}
-            </motion.button>
-          </>
-        )}
-
-        <div style={{ textAlign: 'center', marginTop: '16px' }}>
-          <button onClick={() => navigate('/')}
-            style={{ background: 'none', border: 'none',
-              color: '#8B949E', fontSize: '12px', cursor: 'pointer' }}>
-            ← Back to Store
-          </button>
-        </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

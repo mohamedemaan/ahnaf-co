@@ -1,140 +1,38 @@
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-:root {
-  --bg-primary: #0D1117;
-  --bg-secondary: #161B22;
-  --bg-card: #1C2128;
-  --accent-blue: #58A6FF;
-  --accent-green: #00FFB3;
-  --accent-purple: #BC8CFF;
-  --accent-orange: #FFA657;
-  --text-primary: #FFFFFF;
-  --text-secondary: #8B949E;
-  --border-color: #30363D;
-  --glass: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
 }
 
-body {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: 'Inter', sans-serif;
-  overflow-x: hidden;
+@layer base {
+  body {
+    background-color: #f8fafc;
+    color: #1e293b;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: var(--bg-primary); }
-::-webkit-scrollbar-thumb {
-  background: var(--accent-blue);
-  border-radius: 10px;
+/* Custom fade-in animation for tab switching */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Glassmorphism ── */
-.glass {
-  background: var(--glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
 }
 
-/* ── Glow Effects ── */
-.glow-blue {
-  box-shadow: 0 0 20px rgba(88, 166, 255, 0.3);
+/* Make sure the bottom navigation doesn't get hidden behind safe areas on iOS */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
 }
-.glow-green {
-  box-shadow: 0 0 20px rgba(0, 255, 179, 0.3);
-}
-
-/* ── Gradient Text ── */
-.gradient-text {
-  background: linear-gradient(135deg, #58A6FF, #00FFB3);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* ── Cyber Button ── */
-.cyber-btn {
-  background: linear-gradient(135deg, #58A6FF, #00FFB3);
-  color: #000;
-  font-weight: 700;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-.cyber-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(88, 166, 255, 0.4);
-}
-
-/* ── Card ── */
-.dark-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  transition: all 0.3s ease;
-}
-.dark-card:hover {
-  border-color: var(--accent-blue);
-  box-shadow: 0 8px 30px rgba(88, 166, 255, 0.15);
-  transform: translateY(-4px);
-}
-
-/* ── Input ── */
-.dark-input {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  color: var(--text-primary);
-  padding: 12px 16px;
-  width: 100%;
-  outline: none;
-  transition: all 0.3s ease;
-  font-family: 'Inter', sans-serif;
-}
-.dark-input:focus {
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
-}
-.dark-input::placeholder {
-  color: var(--text-secondary);
-}
-
-/* ── Particle Background ── */
-.particle-bg {
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(88, 166, 255, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(0, 255, 179, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(188, 140, 255, 0.08) 0%, transparent 50%),
-    var(--bg-primary);
-}
-
-/* ── Animations ── */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
-}
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(88, 166, 255, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(88, 166, 255, 0.6); }
-}
-@keyframes scan-line {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100vh); }
-}
-
-.float-animation { animation: float 3s ease-in-out infinite; }
-.pulse-animation { animation: pulse-glow 2s ease-in-out infinite; }

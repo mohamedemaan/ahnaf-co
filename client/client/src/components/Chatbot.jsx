@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
+import { useLocation } from "react-router-dom";
 
 function Chatbot() {
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: "Hi! 👋 I'm Ahnaf AI Assistant. How can I help you shop today?",
+      content: "Hi! 👋 I'm Ahnaf & Co AI Assistant. How can I help you shop today?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -66,6 +68,15 @@ function Chatbot() {
     "Return policy?",
     "Offers today?",
   ];
+
+  if (
+    location.pathname === "/" ||
+    location.pathname === "/landing" ||
+    location.pathname.startsWith("/admin") ||
+    location.pathname === "/myorders"
+  ) {
+    return null;
+  }
 
   return (
     <>
@@ -144,7 +155,7 @@ function Chatbot() {
                   className="font-black text-sm tracking-widest"
                   style={{ fontFamily: "JetBrains Mono", color: "#FFFFFF" }}
                 >
-                  AHNAF AI
+                  Ahnaf & Co AI
                 </h3>
                 <div className="flex items-center gap-2">
                   <motion.div

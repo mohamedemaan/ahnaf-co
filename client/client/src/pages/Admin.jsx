@@ -187,10 +187,10 @@ export default function Admin() {
   };
 
   useEffect(() => {
-    fetchAll();
-  }, []); // eslint-disable-line
+  fetchAll();
+}, []);
 
-  const generateDescription = async () => {
+  async function generateDescription() {
     if (!form.title || !form.category) {
       alert('Enter title & category first!'); return;
     }
@@ -206,7 +206,7 @@ export default function Admin() {
     } finally {
       setAiLoading(false);
     }
-  };
+  }
 
   const handleSubmit = async () => {
     if (!form.title || !form.price || !form.category) {

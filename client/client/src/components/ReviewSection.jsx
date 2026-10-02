@@ -8,19 +8,14 @@ const API = import.meta.env.VITE_API_URL;
 const StarRating = ({ rating, setRating, readOnly = false }) => {
   const [hover, setHover] = useState(0);
   return (
-    <div style={{ display: 'flex', gap: '4px' }}>
+    <div className="flex gap-1">
       {[1, 2, 3, 4, 5].map(star => (
         <span
           key={star}
           onClick={() => !readOnly && setRating(star)}
           onMouseEnter={() => !readOnly && setHover(star)}
           onMouseLeave={() => !readOnly && setHover(0)}
-          style={{
-            fontSize: '24px',
-            cursor: readOnly ? 'default' : 'pointer',
-            color: star <= (hover || rating) ? '#FFD700' : '#333',
-            transition: 'color 0.2s'
-          }}
+          className={`text-2xl transition-colors ${readOnly ? "cursor-default" : "cursor-pointer"} ${star <= (hover || rating) ? "text-yellow-400" : "text-gray-300"}`}
         >★</span>
       ))}
     </div>
@@ -30,21 +25,13 @@ const StarRating = ({ rating, setRating, readOnly = false }) => {
 // 🏷️ Sentiment Badge
 const SentimentBadge = ({ sentiment }) => {
   const config = {
-    Positive: { emoji: '😊', color: '#00ff88', bg: 'rgba(0,255,136,0.1)', border: 'rgba(0,255,136,0.3)' },
-    Negative: { emoji: '😞', color: '#ff4444', bg: 'rgba(255,68,68,0.1)',  border: 'rgba(255,68,68,0.3)' },
-    Neutral:  { emoji: '😐', color: '#ffaa00', bg: 'rgba(255,170,0,0.1)', border: 'rgba(255,170,0,0.3)' }
+    Positive: { emoji: '😊', color: 'text-green-700', bg: 'bg-green-100', border: 'border-green-200' },
+    Negative: { emoji: '😞', color: 'text-rose-700', bg: 'bg-rose-100', border: 'border-rose-200' },
+    Neutral:  { emoji: '😐', color: 'text-yellow-700', bg: 'bg-yellow-100', border: 'border-yellow-200' }
   };
   const c = config[sentiment] || config.Neutral;
   return (
-    <span style={{
-      padding: '3px 10px',
-      borderRadius: '20px',
-      background: c.bg,
-      border: `1px solid ${c.border}`,
-      color: c.color,
-      fontSize: '12px',
-      fontWeight: '600'
-    }}>
+    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${c.bg} ${c.color} ${c.border}`}>
       {c.emoji} {sentiment}
     </span>
   );
@@ -115,43 +102,27 @@ const ReviewSection = ({ productId, userId, userName }) => {
   const negativeCount = reviews.filter(r => r.sentiment === 'Negative').length;
 
   return (
-    <div style={{ marginTop: '40px' }}>
+    <div>
 
       {/* Header */}
-      <h2 style={{
-        color: '#00ffff',
-        fontSize: '22px',
-        fontWeight: '700',
-        marginBottom: '24px',
-        borderBottom: '1px solid rgba(0,255,255,0.2)',
-        paddingBottom: '12px'
-      }}>
+      <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-100 flex items-center gap-2">
         ⭐ Reviews & Ratings
       </h2>
 
       {/* Stats Bar */}
       {reviews.length > 0 && (
-        <div style={{
-          display: 'flex', gap: '16px', marginBottom: '28px',
-          flexWrap: 'wrap'
-        }}>
+        <div className="flex flex-wrap gap-4 mb-8">
           {[
-            { label: 'Avg Rating', value: `${avgRating}/5`, color: '#FFD700' },
-            { label: 'Total',      value: reviews.length,   color: '#00ffff' },
-            { label: '😊 Positive', value: positiveCount,   color: '#00ff88' },
-            { label: '😞 Negative', value: negativeCount,   color: '#ff4444' },
+            { label: 'Avg Rating', value: `${avgRating}/5`, color: 'text-yellow-500' },
+            { label: 'Total',      value: reviews.length,   color: 'text-teal-600' },
+            { label: 'Positive', emoji: '😊', value: positiveCount,   color: 'text-green-600' },
+            { label: 'Negative', emoji: '😞', value: negativeCount,   color: 'text-rose-500' },
           ].map((stat, i) => (
-            <div key={i} style={{
-              padding: '12px 20px',
-              borderRadius: '12px',
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              textAlign: 'center'
-            }}>
-              <div style={{ color: stat.color, fontSize: '20px', fontWeight: '700' }}>
-                {stat.value}
+            <div key={i} className="flex-1 min-w-[120px] p-4 bg-slate-50 border border-gray-200 rounded-xl text-center">
+              <div className={`text-2xl font-black ${stat.color}`}>
+                {stat.emoji} {stat.value}
               </div>
-              <div style={{ color: '#888', fontSize: '12px', marginTop: '2px' }}>
+              <div className="text-sm text-gray-500 mt-1 font-semibold">
                 {stat.label}
               </div>
             </div>
@@ -160,14 +131,8 @@ const ReviewSection = ({ productId, userId, userName }) => {
       )}
 
       {/* Submit Form */}
-      <div style={{
-        padding: '24px',
-        borderRadius: '16px',
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(0,255,255,0.15)',
-        marginBottom: '28px'
-      }}>
-        <h3 style={{ color: '#ccc', fontSize: '16px', marginBottom: '16px' }}>
+      <div className="p-6 bg-slate-50 border border-gray-200 rounded-xl mb-8">
+        <h3 className="text-gray-700 font-bold mb-4">
           Write a Review
         </h3>
 
@@ -178,24 +143,11 @@ const ReviewSection = ({ productId, userId, userName }) => {
           onChange={e => setComment(e.target.value)}
           placeholder="Share your experience with this product..."
           rows={3}
-          style={{
-            width: '100%', marginTop: '16px',
-            padding: '12px', borderRadius: '10px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(0,255,255,0.2)',
-            color: '#fff', fontSize: '14px',
-            resize: 'vertical', outline: 'none',
-            boxSizing: 'border-box'
-          }}
+          className="w-full mt-4 p-4 rounded-lg bg-white border border-gray-300 text-gray-800 text-sm focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
         />
 
         {message && (
-          <div style={{
-            marginTop: '10px', padding: '10px',
-            borderRadius: '8px',
-            background: 'rgba(0,255,255,0.05)',
-            color: '#00ffff', fontSize: '13px'
-          }}>
+          <div className="mt-4 p-3 rounded-lg bg-teal-50 text-teal-700 border border-teal-200 text-sm font-semibold">
             {message}
           </div>
         )}
@@ -203,16 +155,7 @@ const ReviewSection = ({ productId, userId, userName }) => {
         <button
           onClick={submitReview}
           disabled={submitting}
-          style={{
-            marginTop: '14px', padding: '12px 28px',
-            borderRadius: '25px',
-            background: submitting
-              ? 'rgba(0,255,255,0.2)'
-              : 'linear-gradient(135deg, #00ffff, #8b00ff)',
-            border: 'none', color: '#fff',
-            fontWeight: '700', fontSize: '14px',
-            cursor: submitting ? 'not-allowed' : 'pointer'
-          }}
+          className={`mt-4 px-6 py-3 rounded-lg font-bold text-white transition ${submitting ? "bg-gray-400 cursor-not-allowed" : "bg-teal-600 hover:bg-teal-700"}`}
         >
           {submitting ? '🤖 Analyzing...' : '✍️ Submit Review'}
         </button>
@@ -220,72 +163,52 @@ const ReviewSection = ({ productId, userId, userName }) => {
 
       {/* Reviews List */}
       {loading ? (
-        <div style={{ color: '#888', textAlign: 'center', padding: '20px' }}>
+        <div className="text-center py-8 text-gray-500 font-medium">
           Loading reviews...
         </div>
       ) : reviews.length === 0 ? (
-        <div style={{
-          color: '#555', textAlign: 'center', padding: '30px',
-          borderRadius: '12px',
-          border: '1px dashed rgba(255,255,255,0.1)'
-        }}>
+        <div className="text-center py-12 border border-dashed border-gray-300 rounded-xl text-gray-500 font-medium">
           No reviews yet. Be the first to review! ⭐
         </div>
       ) : (
         <AnimatePresence>
-          {reviews.map((review, i) => (
-            <motion.div
-              key={review._id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              style={{
-                padding: '18px',
-                borderRadius: '14px',
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.07)',
-                marginBottom: '12px'
-              }}
-            >
-              {/* Review Header */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap', gap: '8px',
-                marginBottom: '10px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{
-                    width: '36px', height: '36px', borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #00ffff33, #8b00ff33)',
-                    display: 'flex', alignItems: 'center',
-                    justifyContent: 'center', color: '#00ffff',
-                    fontWeight: '700', fontSize: '14px'
-                  }}>
-                    {review.userName?.[0]?.toUpperCase() || 'U'}
-                  </div>
-                  <div>
-                    <div style={{ color: '#fff', fontWeight: '600', fontSize: '14px' }}>
-                      {review.userName}
+          <div className="space-y-4">
+            {reviews.map((review, i) => (
+              <motion.div
+                key={review._id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="p-5 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition"
+              >
+                {/* Review Header */}
+                <div className="flex justify-between items-center flex-wrap gap-2 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-teal-100 text-teal-700 font-black flex items-center justify-center">
+                      {review.userName?.[0]?.toUpperCase() || 'U'}
                     </div>
-                    <div style={{ color: '#555', fontSize: '11px' }}>
-                      {new Date(review.createdAt).toLocaleDateString()}
+                    <div>
+                      <div className="font-bold text-gray-900 text-sm">
+                        {review.userName}
+                      </div>
+                      <div className="text-gray-400 text-xs mt-0.5">
+                        {new Date(review.createdAt).toLocaleDateString()}
+                      </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-4">
+                    <StarRating rating={review.rating} readOnly />
+                    <SentimentBadge sentiment={review.sentiment} />
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <StarRating rating={review.rating} readOnly />
-                  <SentimentBadge sentiment={review.sentiment} />
-                </div>
-              </div>
 
-              {/* Comment */}
-              <p style={{ color: '#bbb', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
-                {review.comment}
-              </p>
-            </motion.div>
-          ))}
+                {/* Comment */}
+                <p className="text-gray-700 text-sm leading-relaxed">
+                  {review.comment}
+                </p>
+              </motion.div>
+            ))}
+          </div>
         </AnimatePresence>
       )}
     </div>

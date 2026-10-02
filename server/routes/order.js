@@ -3,13 +3,22 @@ const router         = express.Router();
 const Order = require("../models/order");
 const authMiddleware = require("../middleware/authMiddleware");
 
+const adminMiddleware = require("../middleware/adminMiddleware");
+
 // ── USER: Create order  POST /api/orders/create ──────────────────────────────
 router.post("/create", authMiddleware, async (req, res) => {
   try {
     const { items, totalAmount, paymentMethod, address } = req.body;
 
     // Support legacy key names from older front-end versions too
-    const orderItems  = items       || req.body.orderItems  || [];
+    let orderItems = items || req.body.orderItems || [];
+    
+    // Map product to productId if frontend sends it as product
+    orderItems = orderItems.map(item => ({
+      productId: item.productId || item.product,
+      quantity: item.quantity
+    }));
+
     const orderAmount = totalAmount || req.body.totalPrice  || 0;
 
     const order = await Order.create({
@@ -41,8 +50,7 @@ router.get("/myorders", authMiddleware, async (req, res) => {
 });
 
 // ── ADMIN: All orders  GET /api/orders ───────────────────────────────────────
-//    (also used by admin.js router — keeping it here avoids duplication)
-router.get("/", async (req, res) => {
+router.get("/", authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const orders = await Order.find()
       .populate("userId", "name email")  // Admin.jsx: o.userId.name / o.userId.email
@@ -54,7 +62,7 @@ router.get("/", async (req, res) => {
 });
 
 // ── ADMIN: Update status  PUT /api/orders/:id ────────────────────────────────
-router.put("/:id", async (req, res) => {
+router.put("/:id", authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const order = await Order.findByIdAndUpdate(
       req.params.id,

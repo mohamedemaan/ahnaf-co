@@ -10,13 +10,20 @@ router.post("/add", authMiddleware, async (req, res) => {
   try {
     const { productId, quantity } = req.body;
 
-    const cartItem = await Cart.create({
-      user: req.user.id,
-      product: productId,
-      quantity,
-    });
+    let cartItem = await Cart.findOne({ user: req.user.id, product: productId });
 
-    res.status(201).json(cartItem);
+    if (cartItem) {
+      cartItem.quantity += (quantity || 1);
+      await cartItem.save();
+    } else {
+      cartItem = await Cart.create({
+        user: req.user.id,
+        product: productId,
+        quantity: quantity || 1,
+      });
+    }
+
+    res.status(200).json(cartItem);
   } catch (err) {
     console.log(err);
 

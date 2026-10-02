@@ -55,7 +55,9 @@ exports.updateProduct = async (req, res) => {
     // Normalise arrays if they come in as comma strings
     const update = { ...req.body };
 
-    if (req.body.images && !Array.isArray(req.body.images)) {
+    if (req.file) {
+      update.images = [req.file.path]; // Replace with new image if uploaded
+    } else if (req.body.images && !Array.isArray(req.body.images)) {
       update.images = req.body.images
         .split(",").map((s) => s.trim()).filter(Boolean);
     }
@@ -91,6 +93,22 @@ exports.deleteProduct = async (req, res) => {
     await Product.findByIdAndDelete(req.params.id);
     res.json({ message: "Deleted successfully" });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ── BULK DELETE ──
+exports.bulkDeleteProducts = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: "Provide an array of product IDs to delete" });
+    }
+    
+    await Product.deleteMany({ _id: { $in: ids } });
+    res.json({ message: "Products deleted successfully", count: ids.length });
+  } catch (err) {
+    console.error("bulkDeleteProducts error:", err);
     res.status(500).json({ error: err.message });
   }
 };

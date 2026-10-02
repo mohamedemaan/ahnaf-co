@@ -3,12 +3,24 @@ const router = express.Router();
 
 const Product = require("../models/Product");
 const upload = require("../middleware/upload");
+const authMiddleware = require("../middleware/authMiddleware");
+
+const adminMiddleware = require("../middleware/adminMiddleware");
 
 const {
   createProduct,
   getProducts,
   deleteProduct,
+  updateProduct,
+  bulkCreateProducts,
+  bulkDeleteProducts,
 } = require("../controllers/productController");
+
+// BULK CREATE
+router.post("/bulk-import", authMiddleware, adminMiddleware, bulkCreateProducts);
+
+// BULK DELETE
+router.post("/bulk-delete", authMiddleware, adminMiddleware, bulkDeleteProducts);
 
 // GET ALL PRODUCTS
 router.get("/", getProducts);
@@ -36,11 +48,16 @@ router.get("/:id", async (req, res) => {
 // CREATE PRODUCT
 router.post(
   "/add",
+  authMiddleware,
+  adminMiddleware,
   upload.single("image"),
   createProduct
 );
 
+// UPDATE PRODUCT
+router.put("/:id", authMiddleware, adminMiddleware, upload.single("image"), updateProduct);
+
 // DELETE PRODUCT
-router.delete("/:id", deleteProduct);
+router.delete("/:id", authMiddleware, adminMiddleware, deleteProduct);
 
 module.exports = router;

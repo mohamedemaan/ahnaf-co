@@ -1,123 +1,129 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
-const API = import.meta.env.VITE_API_URL;
-
-function Register() {
+const Register = () => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    name: "", phone: "", email: "", password: "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [focused, setFocused] = useState("");
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleSocialLogin = (provider) => {
+    alert(`Authenticating with ${provider}...`);
+    navigate('/home');
   };
 
-  const registerUser = async (e) => {
+  const handleRegister = (e) => {
     e.preventDefault();
-    try {
-      setLoading(true);
-      await axios.post(`${API}/api/auth/register`, formData);
-      alert("Account created! 🎉");
-      navigate("/login");
-    } catch (err) {
-      alert(err.response?.data?.message || "Register failed!");
-    } finally {
-      setLoading(false);
-    }
+    navigate('/home');
   };
-
-  const fields = [
-    { name: "name",     label: "FULL NAME",     placeholder: "Mohamed Ahnaf", type: "text" },
-    { name: "phone",    label: "PHONE NUMBER",  placeholder: "+91 9876543210", type: "tel" },
-    { name: "email",    label: "EMAIL ADDRESS", placeholder: "your@email.com", type: "email" },
-    { name: "password", label: "PASSWORD",      placeholder: "••••••••",       type: "password" },
-  ];
 
   return (
-    <div className="min-h-screen particle-bg flex items-center justify-center px-4 py-10 relative overflow-hidden">
-      <motion.div
-        initial={{ opacity: 0, y: 40, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, type: "spring" }}
-        className="glass w-full max-w-md p-8 relative z-10"
-      >
-        <motion.div className="text-center mb-8">
-          <div className="text-5xl mb-3">🛍️</div>
-          <h1 className="text-2xl font-black tracking-widest gradient-text"
-              style={{ fontFamily: "JetBrains Mono" }}>
-            AHNAF ENTERPRISES
-          </h1>
-          <p className="text-sm mt-1" style={{ color: "#8B949E" }}>
-            Create Your Account 🚀
-          </p>
-        </motion.div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4 font-sans pb-24 md:pb-4">
+      
+      {/* Brand Header */}
+      <div className="flex justify-center items-center mb-8 gap-3">
+        <span className="text-5xl drop-shadow-md">🛍️</span>
+        <h1 className="text-4xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 drop-shadow-sm">Ahnaf & Co</h1>
+      </div>
 
-        <form onSubmit={registerUser}>
-          {fields.map((field, i) => (
-            <motion.div
-              key={field.name}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 + i * 0.1 }}
-              className="mb-4"
-            >
-              <label className="text-xs font-semibold mb-2 block"
-                     style={{ color: "#8B949E", fontFamily: "JetBrains Mono" }}>
-                {field.label}
-              </label>
-              <input
-                type={field.type}
-                name={field.name}
-                placeholder={field.placeholder}
-                onChange={handleChange}
-                onFocus={() => setFocused(field.name)}
-                onBlur={() => setFocused("")}
-                className="dark-input"
-                style={{ borderColor: focused === field.name ? "#58A6FF" : "#30363D" }}
-                required
-              />
-            </motion.div>
-          ))}
-
-          <motion.button
-            type="submit"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            disabled={loading}
-            className="cyber-btn w-full py-4 text-base font-bold rounded-xl mt-2"
-          >
-            {loading ? "Creating Account..." : "Create Account →"}
-          </motion.button>
-        </form>
-
-        <div className="flex items-center gap-3 my-6">
-          <div className="flex-1 h-px" style={{ background: "#30363D" }} />
-          <span className="text-xs" style={{ color: "#8B949E" }}>or</span>
-          <div className="flex-1 h-px" style={{ background: "#30363D" }} />
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+        
+        {/* Header Section */}
+        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 text-center text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
+          <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-20 h-20 bg-blue-400 opacity-20 rounded-full blur-lg"></div>
+          
+          <h1 className="text-3xl font-black tracking-tight mb-2 relative z-10">Create Account</h1>
+          <p className="text-blue-100 text-sm font-medium relative z-10">Join Ahnaf & Co to start shopping today</p>
         </div>
 
-        <div className="text-center">
-          <p className="text-sm" style={{ color: "#8B949E" }}>
-            Already have account?{" "}
-            <Link to="/login" className="font-bold" style={{ color: "#58A6FF" }}>
-              Login →
+        {/* Form Section */}
+        <div className="p-8">
+          <form className="space-y-4" onSubmit={handleRegister}>
+            
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-1">Full Name</label>
+              <div className="relative">
+                <span className="absolute left-3 top-3 text-slate-400">👤</span>
+                <input 
+                  type="text" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-slate-700 font-medium"
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-1">Email Address</label>
+              <div className="relative">
+                <span className="absolute left-3 top-3 text-slate-400">✉️</span>
+                <input 
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-slate-700 font-medium"
+                  placeholder="name@example.com"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-1">Password</label>
+              <div className="relative">
+                <span className="absolute left-3 top-3 text-slate-400">🔒</span>
+                <input 
+                  type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-slate-700 font-medium"
+                  placeholder="Create a strong password"
+                  required
+                />
+              </div>
+            </div>
+
+            <button 
+              type="submit" 
+              className="w-full py-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:shadow-blue-600/50 hover:-translate-y-0.5 transition-all active:translate-y-0 mt-6"
+            >
+              Sign Up Free
+            </button>
+            
+          </form>
+
+          {/* Divider */}
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <div className="h-px bg-slate-200 flex-1"></div>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Or continue with</span>
+            <div className="h-px bg-slate-200 flex-1"></div>
+          </div>
+
+          {/* Social Logins */}
+          <div className="mt-6 grid grid-cols-2 gap-4">
+            <button onClick={() => handleSocialLogin('Google')} type="button" className="flex items-center justify-center gap-2 py-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm font-semibold text-slate-700">
+              <span className="text-xl">G</span> Google
+            </button>
+            <button onClick={() => handleSocialLogin('Apple')} type="button" className="flex items-center justify-center gap-2 py-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm font-semibold text-slate-700">
+              <span className="text-xl">🍎</span> Apple
+            </button>
+          </div>
+
+          {/* Footer */}
+          <p className="mt-8 text-center text-sm font-medium text-slate-600">
+            Already have an account?{' '}
+            <Link to="/login" className="font-bold text-blue-600 hover:text-blue-700 hover:underline">
+              Sign in instead
             </Link>
           </p>
         </div>
 
-        <div className="text-center mt-4">
-          <Link to="/" className="text-xs" style={{ color: "#8B949E" }}>
-            ← Back to Home
-          </Link>
-        </div>
-      </motion.div>
+      </div>
     </div>
   );
-}
+};
 
 export default Register;

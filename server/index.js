@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 process.env.JWT_SECRET = process.env.JWT_SECRET || "emaan123secretkey";
 
 const express = require("express");
@@ -12,6 +13,7 @@ const orderRoutes = require("./routes/order");
 const userRoutes = require("./routes/userRoutes");
 const aiRoutes = require("./routes/ai");
 const adminAuthRoutes = require("./routes/Adminauth");
+const reviewRoutes = require("./routes/reviewRoutes");
 
 const app = express();
 
@@ -33,23 +35,23 @@ app.use(
   })
 );
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-app.get("/", (req, res) => res.json({ message: "API Running 🚀" }));
+
 app.use("/api/auth", authRoutes);
 
 // ── DB ──
 connectDB();
 
 // ── Routes ──
-app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/admin-auth", adminAuthRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 // ── Test Route ──
 app.get("/", (req, res) => {
@@ -58,5 +60,6 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
+  console.log("MONGO_URI =", process.env.MONGO_URI);
   console.log(`Server running on port ${PORT}`);
 });
