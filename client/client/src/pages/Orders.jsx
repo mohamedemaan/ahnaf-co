@@ -7,8 +7,11 @@ const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function Orders() {
   const [cartItems, setCartItems] = useState([]);
+  const userData = JSON.parse(localStorage.getItem('user')) || {};
   const [address, setAddress] = useState({
-    fullName: "", phone: "", street: "",
+    fullName: userData.name || "", 
+    phone: userData.phone || "", 
+    street: userData.address || "",
     city: "", state: "", pincode: "",
   });
   const [step, setStep] = useState(1);
@@ -168,33 +171,10 @@ function Orders() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-20">
-
-      {/* ── Navbar ── */}
-      <nav className="bg-gradient-to-r from-teal-400 to-teal-300 p-3 md:p-4 sticky top-0 z-50 shadow-sm flex items-center justify-between relative">
-        <button
-          onClick={() => navigate("/cart")}
-          className="px-3 md:px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-bold transition flex items-center whitespace-nowrap z-10"
-        >
-          ← Back
-        </button>
-
-        <div 
-          onClick={() => navigate("/")}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 cursor-pointer z-0"
-        >
-          <span className="text-xl md:text-2xl">🛍️</span>
-          <span className="font-black text-lg md:text-xl text-white tracking-wider whitespace-nowrap">
-            Ahnaf & Co
-          </span>
-        </div>
-      </nav>
-
-      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
-
-        <h1 className="text-2xl md:text-3xl font-black text-gray-900 mb-8 text-center md:text-left">
-          📦 Checkout
-        </h1>
+    <div className="max-w-6xl mx-auto p-4 md:p-8 mt-4 font-sans text-slate-800 pb-20">
+      <h1 className="text-2xl md:text-3xl font-black text-slate-900 mb-8 text-center md:text-left">
+        📦 Checkout
+      </h1>
 
         {/* ── Step Indicator ── */}
         <motion.div
@@ -348,7 +328,7 @@ function Orders() {
                           </p>
                         </div>
                         <span className="font-black text-gray-900 text-lg">
-                          ₹{(item.product?.price || 0) * item.quantity}
+                          ₹{((item.product?.price || 0) * item.quantity).toLocaleString()}
                         </span>
                       </div>
                     ))}
@@ -409,7 +389,7 @@ function Orders() {
                       Total Amount
                     </span>
                     <span className="text-2xl md:text-3xl font-black text-gray-900">
-                      ₹{totalPrice}
+                      ₹{totalPrice.toLocaleString()}
                     </span>
                   </div>
 
@@ -469,7 +449,7 @@ function Orders() {
                       </p>
                     </div>
                     <span className="text-xs font-black text-gray-900">
-                      ₹{(item.product?.price || 0) * item.quantity}
+                      ₹{((item.product?.price || 0) * item.quantity).toLocaleString()}
                     </span>
                   </div>
                 ))}
@@ -478,13 +458,11 @@ function Orders() {
                 <span className="font-black text-sm text-gray-500 tracking-widest uppercase">
                   Total
                 </span>
-                <span className="font-black text-xl text-gray-900">₹{totalPrice}</span>
+                <span className="font-black text-xl text-gray-900">₹{totalPrice.toLocaleString()}</span>
               </div>
             </div>
           </motion.div>
-
         </div>
-      </div>
     </div>
   );
 }

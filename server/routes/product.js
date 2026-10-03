@@ -50,12 +50,28 @@ router.post(
   "/add",
   authMiddleware,
   adminMiddleware,
-  upload.single("image"),
+  (req, res, next) => {
+    upload.array("images", 10)(req, res, function (err) {
+      if (err) {
+        console.error("Multer upload error:", err);
+        return res.status(400).json({ error: "Upload Error: " + err.message });
+      }
+      next();
+    });
+  },
   createProduct
 );
 
 // UPDATE PRODUCT
-router.put("/:id", authMiddleware, adminMiddleware, upload.single("image"), updateProduct);
+router.put("/:id", authMiddleware, adminMiddleware, (req, res, next) => {
+  upload.array("images", 10)(req, res, function (err) {
+    if (err) {
+      console.error("Multer upload error:", err);
+      return res.status(400).json({ error: "Upload Error: " + err.message });
+    }
+    next();
+  });
+}, updateProduct);
 
 // DELETE PRODUCT
 router.delete("/:id", authMiddleware, adminMiddleware, deleteProduct);

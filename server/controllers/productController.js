@@ -5,8 +5,8 @@ exports.createProduct = async (req, res) => {
   try {
     let images = [];
 
-    if (req.file) {
-      images = [req.file.path];
+    if (req.files && req.files.length > 0) {
+      images = req.files.map(file => file.path);
     } else if (req.body.images) {
       images = Array.isArray(req.body.images)
         ? req.body.images
@@ -16,10 +16,19 @@ exports.createProduct = async (req, res) => {
             .filter(Boolean);
     }
 
+    let parsedAttributes = {};
+    if (req.body.attributes) {
+      try { parsedAttributes = JSON.parse(req.body.attributes); } catch (e) { }
+    }
+
     const product = await Product.create({
       title:         req.body.title,
       description:   req.body.description,
       category:      req.body.category,
+      subcategory:   req.body.subcategory,
+      productType:   req.body.productType,
+      sku:           req.body.sku,
+      attributes:    parsedAttributes,
       price:         Number(req.body.price)         || 0,
       originalPrice: Number(req.body.originalPrice) || 0,
       stock:         Number(req.body.stock)         || 0,
@@ -34,8 +43,11 @@ exports.createProduct = async (req, res) => {
 
     res.status(201).json(product);
   } catch (err) {
-    console.error("createProduct error:", err);
-    res.status(500).json({ error: err.message });
+    console.error("CRITICAL createProduct error:", err);
+    res.status(500).json({ 
+      error: err ? err.message : "Unknown server error",
+      stack: err ? err.stack : null
+    });
   }
 };
 
@@ -55,8 +67,8 @@ exports.updateProduct = async (req, res) => {
     // Normalise arrays if they come in as comma strings
     const update = { ...req.body };
 
-    if (req.file) {
-      update.images = [req.file.path]; // Replace with new image if uploaded
+    if (req.files && req.files.length > 0) {
+      update.images = req.files.map(file => file.path); // Replace with new images if uploaded
     } else if (req.body.images && !Array.isArray(req.body.images)) {
       update.images = req.body.images
         .split(",").map((s) => s.trim()).filter(Boolean);
@@ -72,6 +84,9 @@ exports.updateProduct = async (req, res) => {
     if (req.body.price)         update.price         = Number(req.body.price);
     if (req.body.originalPrice) update.originalPrice = Number(req.body.originalPrice);
     if (req.body.stock)         update.stock         = Number(req.body.stock);
+    if (req.body.attributes) {
+      try { update.attributes = JSON.parse(req.body.attributes); } catch (e) { }
+    }
 
     const product = await Product.findByIdAndUpdate(
       req.params.id,

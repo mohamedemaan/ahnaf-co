@@ -11,8 +11,6 @@ import Orders from "./pages/Orders";
 import MyOrders from "./pages/MyOrders";
 import Profile from "./pages/Profile";
 
-import Chatbot from "./components/Chatbot";
-
 import ResponsiveLayout from "./components/ResponsiveLayout";
 import { LanguageProvider } from "./context/LanguageContext";
 
@@ -34,8 +32,6 @@ function App() {
           <Route path="/orders" element={<Orders />} />
           <Route path="/myorders" element={<MyOrders />} />
         </Routes>
-
-        <Chatbot />
       </ResponsiveLayout>
     </LanguageProvider>
   );

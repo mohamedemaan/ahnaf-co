@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
 
+  const userData = JSON.parse(localStorage.getItem('user')) || {};
   const user = {
-    name: "Mohamed Emaan",
-    email: "emmann.2006@gmail.com",
-    tier: "Gold VIP",
-    points: 1250,
-    wallet: 450,
+    name: userData.name || "Guest User",
+    email: userData.email || "No email provided",
+    phone: userData.phone || "No phone provided",
+    address: userData.address || "No address provided",
+    tier: userData.tier || "VIP Member",
+    points: userData.points || 0,
+    wallet: userData.wallet || 0,
   };
 
   const menuItems = [
@@ -30,11 +34,11 @@ const Profile = () => {
       case 'wishlist':
         return <WishlistView />;
       case 'addresses':
-        return <AddressView />;
+        return <AddressView user={user} />;
       case 'rewards':
         return <RewardsView points={user.points} tier={user.tier} />;
       case 'settings':
-        return <SettingsView />;
+        return <SettingsView user={user} />;
       case 'support':
         return <SupportView />;
       default:
@@ -115,7 +119,13 @@ const Profile = () => {
                 <span className="text-lg">{item.icon}</span> {item.label}
               </button>
             ))}
-            <button className="w-full flex items-center gap-3 px-6 py-4 text-left text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-colors border-t border-slate-100">
+            <button 
+              onClick={() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+              }}
+              className="w-full flex items-center gap-3 px-6 py-4 text-left text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-colors border-t border-slate-100">
               <span className="text-lg">🚪</span> Logout
             </button>
           </nav>
@@ -192,37 +202,83 @@ const DashboardView = ({ user, setTab }) => (
   </div>
 );
 
-const OrdersView = () => (
-  <div className="animate-fade-in">
-    <h2 className="text-2xl font-bold mb-6 text-slate-900">Order History</h2>
-    <div className="space-y-4">
-      {/* Mock Order Card */}
-      <div className="border border-slate-200 rounded-xl p-4 md:p-6 hover:shadow-sm transition">
-        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-4 pb-4 border-b border-slate-100">
-          <div>
-            <p className="text-xs text-slate-400 font-mono">ORDER #ORD-7392-XT</p>
-            <p className="text-sm font-semibold text-slate-700 mt-1">Placed on Oct 01, 2026</p>
-          </div>
-          <div className="text-left md:text-right">
-            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold inline-block">✅ Delivered</span>
-          </div>
+const OrdersView = () => {
+  const [orders, setOrders] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/orders/myorders`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setOrders(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, []);
+
+  if (loading) return <div className="text-center py-10 font-bold text-slate-500">Loading Orders...</div>;
+
+  return (
+    <div className="animate-fade-in">
+      <h2 className="text-2xl font-bold mb-6 text-slate-900">Order History</h2>
+      {orders.length === 0 ? (
+        <div className="text-center py-12 bg-slate-50 rounded-2xl border border-slate-100">
+          <span className="text-4xl mb-3 block">📦</span>
+          <h3 className="font-bold text-slate-700">No orders yet</h3>
+          <p className="text-sm text-slate-500 mt-1">When you place an order, it will appear here.</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="w-20 h-20 bg-slate-100 rounded-lg flex items-center justify-center text-2xl">🎧</div>
-          <div className="flex-grow">
-            <h4 className="font-bold text-slate-800">Premium Wireless Headphones</h4>
-            <p className="text-sm text-slate-500 mt-1">Qty: 1 • Color: Matte Black</p>
-            <p className="font-bold text-blue-600 mt-1">₹4,999</p>
-          </div>
-          <div className="hidden md:flex flex-col gap-2">
-            <button className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-semibold hover:bg-slate-50">View Invoice</button>
-            <button className="px-4 py-2 text-rose-600 text-sm font-semibold hover:underline">Return Item</button>
-          </div>
+      ) : (
+        <div className="space-y-4">
+          {orders.map(order => (
+            <div key={order._id} className="border border-slate-200 rounded-xl p-4 md:p-6 hover:shadow-sm transition">
+              <div className="flex flex-col md:flex-row justify-between gap-4 mb-4 pb-4 border-b border-slate-100">
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Order ID</span>
+                    <span className="bg-slate-100 text-slate-700 text-xs font-bold px-2 py-1 rounded font-mono">{order._id.substring(0,8)}</span>
+                  </div>
+                  <p className="text-sm font-semibold text-slate-800">
+                    Placed on {new Date(order.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="text-left md:text-right">
+                  <p className="text-2xl font-black text-slate-900">₹{order.totalAmount}</p>
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-black mt-2 uppercase tracking-widest
+                    ${order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-700' 
+                    : order.status === 'Cancelled' ? 'bg-rose-100 text-rose-700' 
+                    : 'bg-blue-100 text-blue-700'}`}>
+                    {order.status}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                {order.items.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-slate-50 rounded-lg p-2 border border-slate-100">
+                      <img src={item.product?.images?.[0]?.split(/[\|,]/)[0] || "https://via.placeholder.com/100"} alt="product" className="w-full h-full object-contain" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-800 line-clamp-1">{item.product?.title || "Unknown Product"}</h4>
+                      <p className="text-sm text-slate-500">Qty: {item.quantity} • ₹{item.price}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 const WishlistView = () => (
   <div className="animate-fade-in text-center py-12">
@@ -233,7 +289,7 @@ const WishlistView = () => (
   </div>
 );
 
-const AddressView = () => (
+const AddressView = ({ user }) => (
   <div className="animate-fade-in">
     <div className="flex justify-between items-center mb-6">
       <h2 className="text-2xl font-bold text-slate-900">Saved Addresses</h2>
@@ -243,10 +299,10 @@ const AddressView = () => (
       <div className="border-2 border-blue-500 bg-blue-50 p-4 rounded-xl relative">
         <span className="absolute top-4 right-4 bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded">DEFAULT</span>
         <h4 className="font-bold text-slate-800 mb-1">Home</h4>
-        <p className="text-sm text-slate-600 leading-relaxed">
-          123, Nexus Tech Park<br/>
-          OMR, Chennai, Tamil Nadu - 600097<br/>
-          Phone: +91 98765 43210
+        <p className="text-sm text-slate-600 leading-relaxed mt-2">
+          {user.address}
+          <br/><br/>
+          <strong>Phone:</strong> {user.phone}
         </p>
         <div className="mt-4 flex gap-4 text-sm font-semibold text-blue-600">
           <button className="hover:underline">Edit</button>

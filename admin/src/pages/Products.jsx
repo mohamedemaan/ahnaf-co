@@ -217,10 +217,10 @@ function Products({ token }) {
           <p className="text-slate-500 text-sm mt-1">Manage catalog, pricing, and stock levels</p>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => setShowCSVModal(true)} className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-50 transition-colors">
-            📥 Import CSV
+          <button onClick={() => window.location.href = '/products/import'} className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-50 transition-colors">
+            📥 Enterprise Bulk Import
           </button>
-          <button onClick={() => setShowAddModal(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold shadow-sm hover:bg-blue-700 transition-colors">
+          <button onClick={() => window.location.href = '/products/add'} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold shadow-sm hover:bg-blue-700 transition-colors">
             + Add Product
           </button>
         </div>
@@ -388,57 +388,7 @@ function Products({ token }) {
         </div>
       )}
 
-      {/* --- ADD PRODUCT MODAL --- */}
-      {showAddModal && (
-        <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 w-[500px] max-w-full">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Add New Product</h2>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 text-xl">✖</button>
-            </div>
-            <form onSubmit={handleAddProduct} className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Product Title</label>
-                <input type="text" required value={newProduct.title} onChange={e => setNewProduct({...newProduct, title: e.target.value})} className="w-full px-4 py-2 border rounded-lg outline-none focus:border-blue-500" placeholder="e.g. Premium T-Shirt" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Category</label>
-                  <input type="text" required value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})} className="w-full px-4 py-2 border rounded-lg outline-none focus:border-blue-500" placeholder="e.g. Clothing" />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Stock</label>
-                  <input type="number" required value={newProduct.stock} onChange={e => setNewProduct({...newProduct, stock: e.target.value})} className="w-full px-4 py-2 border rounded-lg outline-none focus:border-blue-500" placeholder="0" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Selling Price (₹)</label>
-                  <input type="number" required value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} className="w-full px-4 py-2 border rounded-lg outline-none focus:border-blue-500" placeholder="999" />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Original Price (₹)</label>
-                  <input type="number" value={newProduct.originalPrice} onChange={e => setNewProduct({...newProduct, originalPrice: e.target.value})} className="w-full px-4 py-2 border rounded-lg outline-none focus:border-blue-500" placeholder="1299" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Product Media</label>
-                <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 bg-slate-50 flex flex-col items-center justify-center text-center">
-                  <input type="file" accept="image/*,video/*" onChange={e => setNewProductImage(e.target.files[0])} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-                  <p className="text-xs text-slate-400 mt-2">Upload a high-quality product image or video</p>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
-                <textarea value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} className="w-full px-4 py-2 border rounded-lg outline-none focus:border-blue-500 h-24" placeholder="Product details..."></textarea>
-              </div>
-              <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors mt-2">
-                Publish Product
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+
 
       {/* --- IMPORT CSV MODAL --- */}
       {showCSVModal && (

@@ -63,4 +63,27 @@ router.delete("/:id", authMiddleware, async (req, res) => {
   }
 });
 
+// ✏️ UPDATE CART QUANTITY
+router.put("/:id", authMiddleware, async (req, res) => {
+  try {
+    const { quantity } = req.body;
+    
+    if (quantity < 1) {
+      return res.status(400).json({ message: "Quantity must be at least 1" });
+    }
+
+    const updatedItem = await Cart.findByIdAndUpdate(
+      req.params.id,
+      { quantity },
+      { new: true }
+    ).populate("product");
+
+    res.json(updatedItem);
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+});
+
 module.exports = router;

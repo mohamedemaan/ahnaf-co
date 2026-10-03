@@ -30,7 +30,7 @@ router.get("/:id", async (req, res) => {
 
 router.post(
   "/add",
-  upload.single("image"),
+  upload.array("images", 10),
   createProduct
 );
 

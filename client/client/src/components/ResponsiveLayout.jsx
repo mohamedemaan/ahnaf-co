@@ -69,7 +69,7 @@ const ResponsiveLayout = ({ children }) => {
             <span className="text-xl">📦</span>
             <span className="text-[10px] font-semibold">Orders</span>
           </Link>
-          <Link to="/login" className={`flex flex-col items-center gap-1 ${location.pathname === '/login' ? 'text-blue-600' : 'text-gray-400'}`}>
+          <Link to="/profile" className={`flex flex-col items-center gap-1 ${location.pathname === '/profile' ? 'text-indigo-600' : 'text-slate-400'}`}>
             <span className="text-xl">👤</span>
             <span className="text-[10px] font-semibold">Profile</span>
           </Link>

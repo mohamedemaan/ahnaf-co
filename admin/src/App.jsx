@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Orders from "./pages/Orders";
 import Customers from "./pages/Customers";
 import Products from "./pages/Products";
+import AddProduct from "./pages/AddProduct";
 import Analytics from "./pages/Analytics";
+import BulkImport from "./pages/BulkImport";
 import Sidebar from "./components/Sidebar";
 
 function App() {
@@ -60,9 +63,12 @@ function App() {
           <div className="relative z-10 max-w-7xl mx-auto h-full">
             <Routes>
               <Route path="/login" element={!token ? <Login setToken={setToken} /> : <Navigate to="/" />} />
+              <Route path="/register" element={!token ? <Register /> : <Navigate to="/" />} />
               <Route path="/" element={token ? <Dashboard token={token} /> : <Navigate to="/login" />} />
               <Route path="/orders" element={token ? <Orders token={token} /> : <Navigate to="/login" />} />
               <Route path="/products" element={token ? <Products token={token} /> : <Navigate to="/login" />} />
+              <Route path="/products/add" element={token ? <AddProduct token={token} /> : <Navigate to="/login" />} />
+              <Route path="/products/import" element={token ? <BulkImport token={token} /> : <Navigate to="/login" />} />
               <Route path="/customers" element={token ? <Customers token={token} /> : <Navigate to="/login" />} />
               <Route path="/analytics" element={token ? <Analytics token={token} /> : <Navigate to="/login" />} />
             </Routes>

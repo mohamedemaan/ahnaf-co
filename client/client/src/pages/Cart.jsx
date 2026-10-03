@@ -46,15 +46,34 @@ function Cart() {
 
   const removeFromCart = async (id) => {
     try {
+      // Optimistically remove from UI
+      setCartItems(prev => prev.filter(item => item._id !== id));
+      
       const token = localStorage.getItem("token");
       await axios.delete(`${API}/api/cart/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      showToast('Item removed!');
-      getCart();
     } catch (err) {
-      showToast('Failed to remove!');
       console.log("Remove Error:", err);
+      // Revert on failure
+      getCart();
+    }
+  };
+
+  const updateQuantity = async (id, newQuantity) => {
+    if (newQuantity < 1) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(`${API}/api/cart/${id}`, { quantity: newQuantity }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // Optimistically update the local state for instant feedback
+      setCartItems(prevItems => 
+        prevItems.map(item => item._id === id ? { ...item, quantity: newQuantity } : item)
+      );
+    } catch (err) {
+      console.log("Update Error:", err);
+      showToast('Failed to update quantity');
     }
   };
 
@@ -79,39 +98,10 @@ function Cart() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-20">
-
-      {/* ── Navbar ── */}
-      <nav className="bg-gradient-to-r from-teal-400 to-teal-300 p-3 md:p-4 sticky top-0 z-50 shadow-sm flex items-center justify-between relative">
-        <button
-          onClick={() => navigate("/home")}
-          className="px-3 md:px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-bold transition flex items-center whitespace-nowrap z-10"
-        >
-          ← Back
-        </button>
-
-        <div 
-          onClick={() => navigate("/")}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 cursor-pointer z-0"
-        >
-          <span className="text-xl md:text-2xl">🛍️</span>
-          <span className="font-black text-lg md:text-xl text-white tracking-wider whitespace-nowrap">
-            Ahnaf & Co
-          </span>
-        </div>
-
-        <div className="flex items-center z-10">
-          <span className="px-3 py-1.5 bg-white text-teal-600 rounded-lg text-sm font-bold shadow-sm flex items-center gap-2 whitespace-nowrap">
-            🛒 {totalItems} items
-          </span>
-        </div>
-      </nav>
-
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8">
-
-        <h1 className="text-2xl md:text-3xl font-black text-gray-900 mb-8">
-          🛒 My Cart
-        </h1>
+    <div className="max-w-6xl mx-auto p-4 md:p-8 mt-4 font-sans text-slate-800 pb-20">
+      <h1 className="text-2xl md:text-3xl font-black text-slate-900 mb-8">
+        🛒 My Cart
+      </h1>
 
         {cartItems.length > 0 ? (
           <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
@@ -157,9 +147,25 @@ function Cart() {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs md:text-sm font-semibold text-gray-500 mt-1">
-                        Qty: {item.quantity}
-                      </p>
+                      <div className="flex items-center gap-3 mt-3">
+                        <div className="flex items-center rounded-lg border border-gray-200 bg-slate-50 overflow-hidden shadow-sm">
+                          <button 
+                            onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                            className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-200 font-bold transition"
+                          >
+                            −
+                          </button>
+                          <span className="w-10 h-8 flex items-center justify-center font-bold text-gray-900 border-x border-gray-200 bg-white text-sm">
+                            {item.quantity}
+                          </span>
+                          <button 
+                            onClick={() => updateQuantity(item._id, Math.min(item.product?.stock || 99, item.quantity + 1))}
+                            className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-200 font-bold transition"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Total + Remove */}
@@ -295,8 +301,6 @@ function Cart() {
             </button>
           </motion.div>
         )}
-
-      </div>
     </div>
   );
 }

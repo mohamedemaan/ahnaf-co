@@ -45,42 +45,8 @@ function MyOrders() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-10">
-
-      {/* ── Navbar ── */}
-      <nav className="bg-gradient-to-r from-teal-400 to-teal-300 p-3 md:p-4 sticky top-0 z-50 shadow-sm flex items-center justify-between relative">
-        <button
-          onClick={() => navigate("/home")}
-          className="px-3 md:px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-bold transition flex items-center whitespace-nowrap z-10"
-        >
-          ← Back
-        </button>
-
-        {/* CENTER: Logo */}
-        <div 
-          onClick={() => navigate("/")}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 cursor-pointer z-0"
-        >
-          <span className="text-xl md:text-2xl">🛍️</span>
-          <span className="font-black text-lg md:text-xl text-white tracking-wider whitespace-nowrap">
-            Ahnaf & Co
-          </span>
-        </div>
-
-        {/* RIGHT: Cart */}
-        <div className="flex items-center gap-1 md:gap-3 z-10">
-          <button
-            onClick={() => navigate("/cart")}
-            className="px-3 md:px-4 py-2 bg-white text-teal-600 hover:bg-teal-50 rounded-lg text-sm font-bold shadow-sm transition flex items-center gap-2 whitespace-nowrap"
-          >
-            🛒 <span className="hidden md:inline">Cart</span>
-          </button>
-        </div>
-      </nav>
-
-      <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8">
-
-        <div className="flex items-center justify-between mb-8">
+    <div className="max-w-6xl mx-auto p-4 md:p-8 mt-4 font-sans text-slate-800 pb-20">
+      <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl md:text-3xl font-black text-gray-900">📦 My Orders</h1>
           <button
             onClick={() => navigate("/home")}
@@ -292,8 +258,6 @@ function MyOrders() {
             </button>
           </motion.div>
         )}
-
-      </div>
     </div>
   );
 }
