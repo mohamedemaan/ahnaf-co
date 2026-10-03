@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSocialLogin = (provider) => {
@@ -12,9 +17,22 @@ const Register = () => {
     navigate('/home');
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    navigate('/home');
+    setError('');
+    try {
+      setLoading(true);
+      await axios.post(`${API}/api/auth/register`, {
+        name,
+        email,
+        password
+      });
+      navigate('/login');
+    } catch (err) {
+      setError(err.response?.data?.message || err.response?.data?.error || "Registration failed.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -41,6 +59,12 @@ const Register = () => {
         <div className="p-8">
           <form className="space-y-4" onSubmit={handleRegister}>
             
+            {error && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-bold text-center border border-red-100">
+                ⚠️ {error}
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">Full Name</label>
               <div className="relative">
@@ -88,9 +112,10 @@ const Register = () => {
 
             <button 
               type="submit" 
-              className="w-full py-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:shadow-blue-600/50 hover:-translate-y-0.5 transition-all active:translate-y-0 mt-6"
+              disabled={loading}
+              className={`w-full py-3.5 text-white font-bold rounded-xl shadow-lg transition-all active:translate-y-0 mt-6 ${loading ? 'bg-slate-400 cursor-not-allowed shadow-none' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-0.5'}`}
             >
-              Sign Up Free
+              {loading ? 'Creating Account...' : 'Sign Up Free'}
             </button>
             
           </form>
