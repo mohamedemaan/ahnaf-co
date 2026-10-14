@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
+import API from "../api";
 
 function Customers({ token }) {
   const [customers, setCustomers] = useState([]);
@@ -18,8 +19,8 @@ function Customers({ token }) {
     try {
       // Fetch users and orders in parallel
       const [usersRes, ordersRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/users/all", { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get("http://localhost:5000/api/orders", { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${API}/api/users/all`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/api/orders`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
       const users = usersRes.data;

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 
-const API = import.meta.env.VITE_API_URL;
+import API from '../api';
 
 // ⭐ Star Rating Component
 const StarRating = ({ rating, setRating, readOnly = false }) => {

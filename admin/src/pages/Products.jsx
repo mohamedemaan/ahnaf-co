@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import API from "../api";
 
 function Products({ token }) {
   const [products, setProducts] = useState([]);
@@ -34,7 +35,7 @@ function Products({ token }) {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/products");
+      const res = await axios.get(`${API}/api/products`);
       setProducts(res.data);
       setLoading(false);
     } catch (err) {
@@ -46,7 +47,7 @@ function Products({ token }) {
   const deleteProduct = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/products/${id}`, {
+      await axios.delete(`${API}/api/products/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchProducts();
@@ -71,7 +72,7 @@ function Products({ token }) {
         formData.append("image", newProductImage);
       }
 
-      await axios.post("http://localhost:5000/api/products/add", formData, {
+      await axios.post(`${API}/api/products/add`, formData, {
         headers: { 
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data" 
@@ -102,7 +103,7 @@ function Products({ token }) {
         formData.append("image", editProductImage);
       }
 
-      await axios.put(`http://localhost:5000/api/products/${editProduct._id}`, formData, {
+      await axios.put(`${API}/api/products/${editProduct._id}`, formData, {
         headers: { 
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data" 
@@ -153,7 +154,7 @@ function Products({ token }) {
       }
 
       try {
-        await axios.post("http://localhost:5000/api/products/bulk-import", { products: parsedProducts }, {
+        await axios.post(`${API}/api/products/bulk-import`, { products: parsedProducts }, {
           headers: { Authorization: `Bearer ${token}` }
         });
         alert(`Successfully imported ${parsedProducts.length} products!`);
@@ -195,7 +196,7 @@ function Products({ token }) {
     if (!window.confirm(`Are you sure you want to delete ${selectedProducts.length} selected products?`)) return;
     
     try {
-      await axios.post("http://localhost:5000/api/products/bulk-delete", { ids: selectedProducts }, {
+      await axios.post(`${API}/api/products/bulk-delete`, { ids: selectedProducts }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSelectedProducts([]);

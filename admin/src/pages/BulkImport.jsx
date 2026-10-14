@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+import API from "../api";
 
 const BulkImport = () => {
   const [csvFile, setCsvFile] = useState(null);

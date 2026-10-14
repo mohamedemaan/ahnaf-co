@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
+import API from "../api";
 
 function Analytics({ token }) {
   const [orders, setOrders] = useState([]);
@@ -9,7 +10,7 @@ function Analytics({ token }) {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/orders", {
+        const res = await axios.get(`${API}/api/orders`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setOrders(res.data);

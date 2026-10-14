@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import API from "../api";
 
 function Orders({ token }) {
   const [orders, setOrders] = useState([]);
@@ -13,7 +14,7 @@ function Orders({ token }) {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/orders", {
+      const res = await axios.get(`${API}/api/orders`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setOrders(res.data);
@@ -29,7 +30,7 @@ function Orders({ token }) {
       // Optimistic UI update
       setOrders(prev => prev.map(o => o._id === id ? { ...o, status } : o));
       
-      await axios.put(`http://localhost:5000/api/orders/${id}`, { status }, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.put(`${API}/api/orders/${id}`, { status }, { headers: { Authorization: `Bearer ${token}` } });
     } catch (err) {
       alert("Failed to update status");
       fetchOrders(); // Revert on failure
@@ -40,7 +41,7 @@ function Orders({ token }) {
     if (!window.confirm("Are you sure you want to completely delete this order?")) return;
     try {
       // Assuming a DELETE route exists (if not, this might fail, but it's standard)
-      await axios.delete(`http://localhost:5000/api/orders/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.delete(`${API}/api/orders/${id}`, { headers: { Authorization: `Bearer ${token}` } });
       setOrders(prev => prev.filter(o => o._id !== id));
     } catch (err) {
       alert("Failed to delete order (Backend route might not be configured)");

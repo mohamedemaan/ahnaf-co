@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import API from "../api";
 
 // ==================================================
 // ADVANCED 3-LEVEL CATEGORY SYSTEM & DYNAMIC FIELDS
@@ -329,7 +330,7 @@ export default function AddProduct({ token }) {
       images.forEach(img => payload.append("images", img));
       videos.forEach(vid => payload.append("images", vid));
 
-      await axios.post("http://localhost:5000/api/products/add", payload, {
+      await axios.post(`${API}/api/products/add`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

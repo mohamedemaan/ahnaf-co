@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+import API from '../api';
 
 const Register = () => {
   const [name, setName] = useState('');

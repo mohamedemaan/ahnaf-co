@@ -4,7 +4,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import ReviewSection from '../components/ReviewSection';
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+import API from "../api";
 
 function ProductDetails() {
   const { id } = useParams();

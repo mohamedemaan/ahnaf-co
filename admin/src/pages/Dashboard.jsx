@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import API from "../api";
 
 const Dashboard = ({ token }) => {
   const navigate = useNavigate();
@@ -17,13 +18,13 @@ const Dashboard = ({ token }) => {
     const fetchDashboardData = async () => {
       try {
         // Fetch Orders
-        const ordersRes = await axios.get("http://localhost:5000/api/orders", {
+        const ordersRes = await axios.get(`${API}/api/orders`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const orders = ordersRes.data;
 
         // Fetch Products
-        const productsRes = await axios.get("http://localhost:5000/api/products");
+        const productsRes = await axios.get(`${API}/api/products`);
         const products = productsRes.data;
 
         // 1. Calculate Pending Orders
