@@ -1,167 +1,318 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import axios from "axios";
 import API from "../api";
+import AdminWorkspaceIllustration from "../components/AdminWorkspaceIllustration";
 
-const Register = () => {
-  const [formData, setFormData] = useState({ username: "", email: "", password: "", confirmPassword: "" });
+export default function Register() {
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [loading, setLoading] = useState(false);
-  
   const navigate = useNavigate();
 
-  // STRICT REGEX RULES FOR REAL-TIME VALIDATION
   const USERNAME_REGEX = /^[a-z][a-z0-9_]{2,19}$/;
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{12,16}$/;
 
-  const calculatePasswordStrength = (pass) => {
+  const passwordStrength = useMemo(() => {
+    if (!password) return 0;
     let score = 0;
-    if (pass.length > 8) score += 1;
-    if (pass.length >= 12) score += 1;
-    if (/[A-Z]/.test(pass)) score += 1;
-    if (/[0-9]/.test(pass)) score += 1;
-    if (/[@$!%*?&]/.test(pass)) score += 1;
+    if (password.length >= 8) score += 1;
+    if (password.length >= 12 && password.length <= 16) score += 1;
+    if (/[A-Z]/.test(password)) score += 1;
+    if (/[0-9]/.test(password)) score += 1;
+    if (/[@$!%*?&]/.test(password)) score += 1;
     return score;
-  };
+  }, [password]);
 
-  const strength = calculatePasswordStrength(formData.password);
-
-  const handleSubmit = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccessMsg("");
 
-    // Frontend Validations
-    if (!USERNAME_REGEX.test(formData.username)) {
-      return setError("Username must start with a letter and contain only lowercase letters, numbers, or underscores (3–20 characters).");
+    if (!USERNAME_REGEX.test(username)) {
+      return setError("Username must start with a letter and contain only lowercase letters, numbers, or underscores (3–20 chars).");
     }
-    if (!EMAIL_REGEX.test(formData.email)) {
-      return setError("Enter a valid email address (example: user@gmail.com).");
+
+    if (!EMAIL_REGEX.test(email)) {
+      return setError("Please enter a valid work email address.");
     }
-    if (!PASSWORD_REGEX.test(formData.password)) {
-      return setError("Password must be 12–16 characters long and include uppercase, lowercase, number, and special character.");
+
+    if (!PASSWORD_REGEX.test(password)) {
+      return setError("Password must be 12–16 characters with uppercase, lowercase, number, and special character.");
     }
-    if (formData.password !== formData.confirmPassword) {
+
+    if (password !== confirmPassword) {
       return setError("Passwords do not match.");
-    }
-
-    const lowerPass = formData.password.toLowerCase();
-    if (lowerPass.includes("password") || lowerPass.includes("admin") || lowerPass.includes("123456")) {
-      return setError("Password is too common or weak.");
-    }
-    if (lowerPass.includes(formData.username.toLowerCase()) || lowerPass.includes(formData.email.split('@')[0].toLowerCase())) {
-      return setError("Password cannot contain your username or email.");
     }
 
     try {
       setLoading(true);
-      const { data } = await axios.post(`${API}/api/admin-auth/register`, {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password
+      const res = await axios.post(`${API}/api/admin-auth/register`, {
+        username: username.trim(),
+        email: email.trim(),
+        password,
       });
-      
-      
-      alert("Registration Successful! Please login.");
-      navigate("/login");
+
+      setSuccessMsg(res.data?.message || "Admin account registered successfully! Redirecting to login...");
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong.");
+      setError(err.response?.data?.message || "Registration failed. Username or email may already exist.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none opacity-20"
-        style={{
-          backgroundImage: `linear-gradient(#cbd5e1 1px, transparent 1px), linear-gradient(90deg, #cbd5e1 1px, transparent 1px)`,
-          backgroundSize: "40px 40px",
-        }}
-      />
-      <div className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md border border-slate-100 z-10">
-        <h1 className="text-3xl font-black text-slate-800 mb-2">Create Account</h1>
-        <p className="text-slate-500 mb-8 font-medium">Bank-level strict security enforcement.</p>
+    <div className="min-h-screen w-full bg-[#f1f5f9] flex items-center justify-center p-4 sm:p-6 md:p-10 font-sans">
+      
+      {/* Spacious Main Split Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-4xl lg:max-w-5xl bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden grid grid-cols-1 md:grid-cols-2"
+      >
+        
+        {/* Left Column: Admin Workspace Illustration */}
+        <div className="hidden md:flex flex-col items-center justify-between bg-slate-50/80 p-10 lg:p-14 border-r border-slate-100 relative">
+          <Link to="/landing" className="w-full flex items-center gap-2.5 select-none hover:opacity-80 transition-opacity">
+            <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-md shadow-indigo-500/30">
+              A
+            </div>
+            <span className="text-lg font-black tracking-wider text-slate-800">Ahnaf &amp; Co</span>
+          </Link>
 
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-bold mb-6 border border-red-100">
-            ⚠️ {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <div>
-            <label className="text-sm font-bold text-slate-700 block mb-2">Username</label>
-            <input
-              type="text"
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50"
-              placeholder="e.g. hexamind_user"
-              required
-            />
+          <div className="my-auto py-10 w-full flex justify-center">
+            <AdminWorkspaceIllustration />
           </div>
 
-          <div>
-            <label className="text-sm font-bold text-slate-700 block mb-2">Email Address</label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50"
-              placeholder="admin@domain.com"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-bold text-slate-700 block mb-2">Secure Password</label>
-            <input
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50"
-              placeholder="12-16 chars, Uppercase, Num, Symbol"
-              required
-            />
-            {/* Strength Indicator */}
-            {formData.password.length > 0 && (
-              <div className="mt-3 flex gap-1 h-1.5">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <div key={s} className={`flex-1 rounded-full ${s <= strength ? (strength <= 2 ? 'bg-red-500' : strength <= 4 ? 'bg-yellow-500' : 'bg-emerald-500') : 'bg-slate-200'}`} />
-                ))}
-              </div>
-            )}
-            <p className="text-xs text-slate-400 mt-2 font-medium">Must be 12-16 characters long and include uppercase, lowercase, number, and special character (@$!%*?&).</p>
-          </div>
-
-          <div>
-            <label className="text-sm font-bold text-slate-700 block mb-2">Confirm Password</label>
-            <input
-              type="password"
-              value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50"
-              placeholder="Re-enter secure password"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className={`mt-4 w-full py-4 rounded-xl text-white font-black text-lg transition-all shadow-xl shadow-indigo-500/30 ${loading ? "bg-slate-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 hover:-translate-y-1"}`}
-          >
-            {loading ? "Registering..." : "Create Secure Account"}
-          </button>
-
-          <p className="text-center text-slate-500 mt-4 font-medium text-sm">
-            Already have an account? <Link to="/login" className="text-indigo-600 font-bold hover:underline">Login here</Link>
+          <p className="text-xs text-slate-400 font-medium tracking-wide text-center">
+            Enterprise Administrative Management Suite
           </p>
-        </form>
-      </div>
+        </div>
+
+        {/* Right Column: Ultra-Neat Form with Generous Spacing */}
+        <div className="px-8 py-12 sm:px-12 sm:py-16 lg:px-16 flex flex-col justify-center">
+          
+          <div className="w-full max-w-md mx-auto">
+            
+            {/* Header: Elevated Higher with Clean Spacing */}
+            <div className="mb-9 text-center">
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
+                Create Account
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+                Please enter your administrative details to register
+              </p>
+            </div>
+
+            {/* Error Notification */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1, x: [-6, 6, -4, 4, 0] }}
+                className="mb-7 p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold text-center"
+              >
+                ⚠️ {error}
+              </motion.div>
+            )}
+
+            {/* Success Notification */}
+            {successMsg && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="mb-7 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold text-center"
+              >
+                ✓ {successMsg}
+              </motion.div>
+            )}
+
+            <form onSubmit={handleRegister} className="space-y-6 sm:space-y-7">
+              
+              {/* Field 1: Username with Label & Spacing */}
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                  Username
+                </label>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    required
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                    placeholder="e.g. mohamed_emaan"
+                    className="w-full bg-[#f8fafc] hover:bg-[#f1f5f9] focus:bg-white text-slate-800 text-sm sm:text-base font-medium rounded-2xl pl-5 pr-12 py-3.5 sm:py-4 border border-slate-200/80 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all outline-none placeholder:text-slate-400 shadow-sm"
+                  />
+                  <div className="absolute right-4 pointer-events-none text-slate-400">
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Field 2: Email Address with Label & Spacing */}
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                  Email Address
+                </label>
+                <div className="relative flex items-center">
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="admin@ahnaf.com"
+                    className="w-full bg-[#f8fafc] hover:bg-[#f1f5f9] focus:bg-white text-slate-800 text-sm sm:text-base font-medium rounded-2xl pl-5 pr-12 py-3.5 sm:py-4 border border-slate-200/80 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all outline-none placeholder:text-slate-400 shadow-sm"
+                  />
+                  <div className="absolute right-4 pointer-events-none text-slate-400">
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect width="20" height="16" x="2" y="4" rx="2" />
+                      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Field 3: Password with Strength Meter & Spacing */}
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                  Password
+                </label>
+                <div className="relative flex items-center">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="12–16 characters with symbols"
+                    className="w-full bg-[#f8fafc] hover:bg-[#f1f5f9] focus:bg-white text-slate-800 text-sm sm:text-base font-medium rounded-2xl pl-5 pr-12 py-3.5 sm:py-4 border border-slate-200/80 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all outline-none placeholder:text-slate-400 font-mono shadow-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                  >
+                    {showPassword ? (
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                        <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                        <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                        <line x1="2" x2="22" y1="2" y2="22" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+
+                {/* Password Strength Meter */}
+                {password && (
+                  <div className="mt-2.5 space-y-1.5">
+                    <div className="flex gap-1.5">
+                      {[1, 2, 3, 4, 5].map((lvl) => (
+                        <div
+                          key={lvl}
+                          className={`h-1.5 flex-1 rounded-full transition-all ${
+                            lvl <= passwordStrength ? "bg-emerald-500" : "bg-slate-200"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Must contain uppercase, lowercase, number, and symbol (@$!%*?&).
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Field 4: Confirm Password with Label & Spacing */}
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative flex items-center">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter password"
+                    className="w-full bg-[#f8fafc] hover:bg-[#f1f5f9] focus:bg-white text-slate-800 text-sm sm:text-base font-medium rounded-2xl pl-5 pr-12 py-3.5 sm:py-4 border border-slate-200/80 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all outline-none placeholder:text-slate-400 font-mono shadow-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                  >
+                    {showConfirmPassword ? (
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                        <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                        <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                        <line x1="2" x2="22" y1="2" y2="22" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Primary Rounded Action Button */}
+              <div className="pt-3">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-4 px-8 rounded-full font-bold text-base text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 active:scale-[0.99] transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                      Creating Account...
+                    </span>
+                  ) : (
+                    "Create Account"
+                  )}
+                </button>
+              </div>
+
+              {/* Footer Switch Link */}
+              <div className="pt-5 text-center">
+                <p className="text-xs sm:text-sm text-slate-500 font-medium">
+                  Already have an account?{" "}
+                  <Link
+                    to="/login"
+                    className="text-indigo-600 font-bold hover:underline"
+                  >
+                    Login here
+                  </Link>
+                </p>
+              </div>
+
+            </form>
+          </div>
+
+        </div>
+
+      </motion.div>
+
     </div>
   );
-};
-
-export default Register;
+}
