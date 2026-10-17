@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 // Pixel-perfect SVG reproduction of Ahnaf & Co's 3D dual shopping bags
 function AhnafShoppingBags({ className = "w-28 h-28 sm:w-36 sm:h-36" }) {
@@ -94,7 +94,6 @@ function AhnafShoppingBags({ className = "w-28 h-28 sm:w-36 sm:h-36" }) {
 
           {/* Tier 1 - Top Rib */}
           <rect x="25" y="44" width="100" height="23" rx="8" fill="url(#blueTier1)" />
-          {/* Tier 1 inner shine */}
           <path d="M 32 47 L 118 47" stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round" />
 
           {/* Tier 2 - Upper Middle Rib */}
@@ -116,7 +115,6 @@ function AhnafShoppingBags({ className = "w-28 h-28 sm:w-36 sm:h-36" }) {
 
 export default function AdminLanding() {
   const navigate = useNavigate();
-  const [introFinished, setIntroFinished] = useState(false);
 
   // Marquee item list for continuous admin ticker
   const marqueeItems = [
@@ -128,14 +126,6 @@ export default function AdminLanding() {
     { icon: "🛡️", text: "Enterprise Role Security" },
     { icon: "⚡", text: "Instant Catalog Sync" },
   ];
-
-  // 1.8s sleek introductory animation timer
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIntroFinished(true);
-    }, 1800);
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <div className="relative min-h-screen w-full bg-white flex flex-col justify-between overflow-x-hidden font-sans select-none">
@@ -156,73 +146,8 @@ export default function AdminLanding() {
       {/* Gentle center spotlight glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-blue-100/35 rounded-full blur-3xl pointer-events-none" />
 
-      {/* ================= INTRO SPLASH OVERLAY (1.5s - 2s) ================= */}
-      <AnimatePresence>
-        {!introFinished && (
-          <motion.div
-            key="intro-overlay"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.03 }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
-            className="fixed inset-0 z-50 bg-white flex flex-col items-center justify-center p-6"
-            style={{
-              backgroundImage: `
-                linear-gradient(to right, rgba(226, 232, 240, 0.8) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(226, 232, 240, 0.8) 1px, transparent 1px)
-              `,
-              backgroundSize: "44px 44px",
-            }}
-          >
-            {/* Animated Logo Scaling */}
-            <motion.div
-              initial={{ scale: 0.7, opacity: 0, y: 15 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col items-center gap-5"
-            >
-              <div className="relative">
-                {/* Pulse ring effect */}
-                <motion.div
-                  animate={{ scale: [1, 1.25, 1], opacity: [0.4, 0.8, 0.4] }}
-                  transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute inset-0 bg-blue-200/50 rounded-full blur-xl"
-                />
-                <AhnafShoppingBags className="w-24 h-24 sm:w-32 sm:h-32 relative z-10" />
-              </div>
-
-              <div className="text-center">
-                <h2 className="text-3xl sm:text-4xl font-black text-blue-600 tracking-tight">
-                  Ahnaf & Co
-                </h2>
-                <p className="text-xs uppercase tracking-widest text-slate-400 font-bold mt-1">
-                  Admin Workspace Suite
-                </p>
-              </div>
-
-              {/* Progress Loading Bar */}
-              <div className="w-48 h-1.5 bg-slate-100 rounded-full overflow-hidden mt-2 relative">
-                <motion.div
-                  initial={{ x: "-100%" }}
-                  animate={{ x: "0%" }}
-                  transition={{ duration: 1.6, ease: "easeInOut" }}
-                  className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
-                />
-              </div>
-            </motion.div>
-
-            {/* Quick Skip button */}
-            <button
-              onClick={() => setIntroFinished(true)}
-              className="absolute bottom-8 text-xs font-semibold text-slate-400 hover:text-blue-600 transition-colors uppercase tracking-wider"
-            >
-              Skip Intro →
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ================= TOP BRAND NAVIGATION BAR ================= */}
-      <header className="relative z-10 w-full px-6 py-5 flex items-center justify-between max-w-7xl mx-auto">
+      {/* ================= MINIMAL TOP BRAND BAR (No Right Links) ================= */}
+      <header className="relative z-10 w-full px-6 py-6 flex items-center justify-between max-w-7xl mx-auto">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black text-sm shadow-md shadow-blue-500/25">
             A
@@ -231,35 +156,22 @@ export default function AdminLanding() {
             Ahnaf <span className="text-blue-600">& Co</span>
           </span>
           <span className="hidden sm:inline-block px-2.5 py-0.5 text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200/60 rounded-full">
-            Admin Console v2.0
+            Admin Suite
           </span>
         </div>
-
-        <div className="flex items-center gap-3 sm:gap-4">
-          <button
-            onClick={() => navigate("/login")}
-            className="text-sm font-bold text-slate-600 hover:text-blue-600 px-3.5 py-2 transition-colors rounded-xl hover:bg-slate-50"
-          >
-            Admin Sign In
-          </button>
-          <button
-            onClick={() => navigate("/register")}
-            className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-xl shadow-sm transition-all hover:shadow-md hover:shadow-blue-500/20 active:scale-95"
-          >
-            Register
-          </button>
-        </div>
+        {/* Right side is intentionally empty to eliminate clutter */}
+        <div />
       </header>
 
-      {/* ================= MAIN HERO SECTION ================= */}
+      {/* ================= MAIN HERO SECTION WITH ON-LOAD MOUNT ANIMATION ================= */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-8 sm:py-12">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 35 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="w-full max-w-3xl flex flex-col items-center text-center"
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-3xl flex flex-col items-center justify-center text-center mx-auto"
         >
-          {/* Dual Shopping Bag Graphic + Ahnaf & Co Title */}
+          {/* Dual Shopping Bag Graphic + Ahnaf & Co Title (Perfect Center Alignment) */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-4">
             <motion.div
               whileHover={{ scale: 1.06, rotate: -2 }}
@@ -283,13 +195,13 @@ export default function AdminLanding() {
           </p>
 
           {/* Blue Arrow Action Tag (Exact Reference match) */}
-          <div className="mt-4 flex items-center gap-2 text-xs sm:text-sm font-black text-blue-600 tracking-wider uppercase">
+          <div className="mt-4 flex items-center justify-center gap-2 text-xs sm:text-sm font-black text-blue-600 tracking-wider uppercase">
             <span>►</span>
             <span>CONTROL SMARTER WITH ENTERPRISE AI</span>
           </div>
 
-          {/* ================= CONTINUOUS MOTION MARQUEE ================= */}
-          <div className="w-full max-w-xl mx-auto my-7 sm:my-9 overflow-hidden relative rounded-2xl py-2.5 bg-slate-50/80 border border-slate-200/70 shadow-inner">
+          {/* ================= CONTINUOUS MOTION MARQUEE (Center-Aligned) ================= */}
+          <div className="w-full max-w-xl mx-auto my-7 sm:my-9 overflow-hidden relative rounded-2xl py-3 bg-slate-50/80 border border-slate-200/70 shadow-inner">
             {/* Edge Fades for Clean Infinite Look */}
             <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none" />
@@ -316,12 +228,11 @@ export default function AdminLanding() {
             </motion.div>
           </div>
 
-          {/* ================= PRIMARY CTA BUTTON ================= */}
-          {/* Matches the blue pill button from the Ahnaf & Co reference image */}
+          {/* ================= PRIMARY CTA BUTTON (ONLY ELEMENT IN CENTER) ================= */}
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.97 }}
-            className="relative mt-2"
+            className="relative mt-2 flex justify-center items-center"
           >
             {/* Glowing ambient drop-shadow beneath button */}
             <div className="absolute inset-0 bg-blue-600 rounded-full blur-xl opacity-40 -z-10 group-hover:opacity-70 transition-opacity" />
@@ -335,23 +246,6 @@ export default function AdminLanding() {
             </button>
           </motion.div>
 
-          {/* Quick Sub-navigation */}
-          <p className="mt-5 text-xs text-slate-400 font-medium">
-            Ready to manage orders & inventory?{" "}
-            <button
-              onClick={() => navigate("/login")}
-              className="text-blue-600 font-bold hover:underline ml-1"
-            >
-              Sign In
-            </button>{" "}
-            or{" "}
-            <button
-              onClick={() => navigate("/register")}
-              className="text-blue-600 font-bold hover:underline"
-            >
-              Create Admin Account
-            </button>
-          </p>
         </motion.div>
       </main>
 

@@ -46,13 +46,13 @@ export default function Login({ setToken }) {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#f1f5f9] flex items-center justify-center p-4 sm:p-6 md:p-10 font-sans">
+    <div className="min-h-screen w-full bg-[#f1f5f9] flex items-center justify-center p-4 sm:p-6 md:p-10 font-sans select-none">
       
       {/* Spacious Main Split Card */}
       <motion.div
-        initial={{ opacity: 0, y: 15 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        transition={{ duration: 0.45 }}
         className="w-full max-w-4xl lg:max-w-5xl bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden grid grid-cols-1 md:grid-cols-2"
       >
         
@@ -79,11 +79,15 @@ export default function Login({ setToken }) {
           
           <div className="w-full max-w-md mx-auto">
             
-            {/* Header: Elevated Higher with Clean Spacing */}
-            <div className="mb-10 text-center">
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
-                Login
+            {/* Header: Admin Login + Title Divider Line */}
+            <div className="mb-8 text-center">
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                Admin Login
               </h2>
+              
+              {/* Subtle Horizontal Divider Line */}
+              <hr className="my-4 border-gray-200" />
+
               <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
                 Welcome back! Please enter your username &amp; password
               </p>
@@ -94,16 +98,16 @@ export default function Login({ setToken }) {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1, x: [-6, 6, -4, 4, 0] }}
-                className="mb-8 p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold text-center"
+                className="mb-6 p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold text-center"
               >
                 ⚠️ {error}
               </motion.div>
             )}
 
-            <form onSubmit={handleLogin} className="space-y-7">
+            <form onSubmit={handleLogin}>
               
               {/* Field 1: Username or Email with Generous Breathing Room */}
-              <div>
+              <div className="mb-6">
                 <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2.5">
                   Username or Email
                 </label>
@@ -126,7 +130,7 @@ export default function Login({ setToken }) {
               </div>
 
               {/* Field 2: Password with Generous Breathing Room */}
-              <div>
+              <div className="mb-6">
                 <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2.5">
                   Password
                 </label>
@@ -162,7 +166,7 @@ export default function Login({ setToken }) {
               </div>
 
               {/* Sub-row: Remember Me + Forgot Password */}
-              <div className="flex items-center justify-between text-xs sm:text-sm pt-1">
+              <div className="flex items-center justify-between text-xs sm:text-sm mb-7">
                 <label className="flex items-center gap-2.5 cursor-pointer text-slate-600 select-none">
                   <input
                     type="checkbox"
@@ -181,8 +185,8 @@ export default function Login({ setToken }) {
                 </button>
               </div>
 
-              {/* Primary Rounded Action Button */}
-              <div className="pt-4">
+              {/* Primary Rounded Action Button (Breathing Room Above) */}
+              <div className="pt-2 mb-6">
                 <button
                   type="submit"
                   disabled={loading}
@@ -200,14 +204,14 @@ export default function Login({ setToken }) {
               </div>
 
               {/* Footer Switch Link */}
-              <div className="pt-6 text-center">
+              <div className="pt-2 text-center">
                 <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                  Don't have account?{" "}
+                  Don't have an admin account?{" "}
                   <Link
                     to="/register"
                     className="text-indigo-600 font-bold hover:underline"
                   >
-                    Let's Get Started For Free
+                    Create Account
                   </Link>
                 </p>
               </div>

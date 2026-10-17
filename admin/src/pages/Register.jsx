@@ -17,18 +17,15 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const USERNAME_REGEX = /^[a-z][a-z0-9_]{2,19}$/;
-  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{12,16}$/;
-
+  // Password Strength Calculation
   const passwordStrength = useMemo(() => {
     if (!password) return 0;
     let score = 0;
     if (password.length >= 8) score += 1;
-    if (password.length >= 12 && password.length <= 16) score += 1;
     if (/[A-Z]/.test(password)) score += 1;
+    if (/[a-z]/.test(password)) score += 1;
     if (/[0-9]/.test(password)) score += 1;
-    if (/[@$!%*?&]/.test(password)) score += 1;
+    if (/[^A-Za-z0-9]/.test(password)) score += 1;
     return score;
   }, [password]);
 
@@ -37,20 +34,20 @@ export default function Register() {
     setError("");
     setSuccessMsg("");
 
-    if (!USERNAME_REGEX.test(username)) {
-      return setError("Username must start with a letter and contain only lowercase letters, numbers, or underscores (3–20 chars).");
+    if (!username.trim() || !email.trim() || !password || !confirmPassword) {
+      return setError("All fields are strictly required.");
     }
 
-    if (!EMAIL_REGEX.test(email)) {
-      return setError("Please enter a valid work email address.");
+    if (username.length < 3) {
+      return setError("Username must be at least 3 characters long.");
     }
 
-    if (!PASSWORD_REGEX.test(password)) {
-      return setError("Password must be 12–16 characters with uppercase, lowercase, number, and special character.");
+    if (password.length < 6) {
+      return setError("Password must be at least 6 characters long.");
     }
 
     if (password !== confirmPassword) {
-      return setError("Passwords do not match.");
+      return setError("Passwords do not match. Please re-enter.");
     }
 
     try {
@@ -71,13 +68,13 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#f1f5f9] flex items-center justify-center p-4 sm:p-6 md:p-10 font-sans">
+    <div className="min-h-screen w-full bg-[#f1f5f9] flex items-center justify-center p-4 sm:p-6 md:p-10 font-sans select-none">
       
       {/* Spacious Main Split Card */}
       <motion.div
-        initial={{ opacity: 0, y: 15 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        transition={{ duration: 0.45 }}
         className="w-full max-w-4xl lg:max-w-5xl bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden grid grid-cols-1 md:grid-cols-2"
       >
         
@@ -100,15 +97,19 @@ export default function Register() {
         </div>
 
         {/* Right Column: Ultra-Neat Form with Generous Spacing */}
-        <div className="px-8 py-12 sm:px-12 sm:py-16 lg:px-16 flex flex-col justify-center">
+        <div className="px-8 py-10 sm:px-12 sm:py-14 lg:px-16 flex flex-col justify-center">
           
           <div className="w-full max-w-md mx-auto">
             
-            {/* Header: Elevated Higher with Clean Spacing */}
-            <div className="mb-9 text-center">
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
+            {/* Header: Create Account + Title Divider Line */}
+            <div className="mb-8 text-center">
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
                 Create Account
               </h2>
+              
+              {/* Subtle Horizontal Divider Line */}
+              <hr className="my-4 border-gray-200" />
+
               <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
                 Please enter your administrative details to register
               </p>
@@ -119,7 +120,7 @@ export default function Register() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1, x: [-6, 6, -4, 4, 0] }}
-                className="mb-7 p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold text-center"
+                className="mb-6 p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold text-center"
               >
                 ⚠️ {error}
               </motion.div>
@@ -130,17 +131,17 @@ export default function Register() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="mb-7 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold text-center"
+                className="mb-6 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold text-center"
               >
                 ✓ {successMsg}
               </motion.div>
             )}
 
-            <form onSubmit={handleRegister} className="space-y-6 sm:space-y-7">
+            <form onSubmit={handleRegister}>
               
-              {/* Field 1: Username with Label & Spacing */}
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+              {/* Field 1: Username with Label & Consistent Gap */}
+              <div className="mb-6">
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2.5">
                   Username
                 </label>
                 <div className="relative flex items-center">
@@ -161,9 +162,9 @@ export default function Register() {
                 </div>
               </div>
 
-              {/* Field 2: Email Address with Label & Spacing */}
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+              {/* Field 2: Email Address with Label & Consistent Gap */}
+              <div className="mb-6">
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2.5">
                   Email Address
                 </label>
                 <div className="relative flex items-center">
@@ -184,9 +185,9 @@ export default function Register() {
                 </div>
               </div>
 
-              {/* Field 3: Password with Strength Meter & Spacing */}
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+              {/* Field 3: Password with Strength Meter & Consistent Gap */}
+              <div className="mb-6">
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2.5">
                   Password
                 </label>
                 <div className="relative flex items-center">
@@ -239,9 +240,9 @@ export default function Register() {
                 )}
               </div>
 
-              {/* Field 4: Confirm Password with Label & Spacing */}
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+              {/* Field 4: Confirm Password with Label & Consistent Gap */}
+              <div className="mb-6">
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2.5">
                   Confirm Password
                 </label>
                 <div className="relative flex items-center">
@@ -275,8 +276,8 @@ export default function Register() {
                 </div>
               </div>
 
-              {/* Primary Rounded Action Button */}
-              <div className="pt-3">
+              {/* Primary Rounded Action Button (Breathing Room Above) */}
+              <div className="pt-2 mb-6">
                 <button
                   type="submit"
                   disabled={loading}
@@ -294,7 +295,7 @@ export default function Register() {
               </div>
 
               {/* Footer Switch Link */}
-              <div className="pt-5 text-center">
+              <div className="pt-2 text-center">
                 <p className="text-xs sm:text-sm text-slate-500 font-medium">
                   Already have an account?{" "}
                   <Link
