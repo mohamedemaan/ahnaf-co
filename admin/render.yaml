@@ -1,0 +1,36 @@
+# Exported from Render on 2026-10-17T13:18:50Z
+version: "1"
+projects:
+- name: ahnaf-admin
+  environments:
+  - name: ahnaf-admin
+    services:
+    - type: web
+      name: ahnaf-admin
+      runtime: node
+      repo: https://github.com/mohamedemaan/ahnaf-co
+      plan: free
+      envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: CLOUD_API_SECRET
+        sync: false
+      - key: CLOUD_API_KEY
+        sync: false
+      - key: CLOUD_NAME
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: MONGO_URI
+        sync: false
+      - key: PORT
+        sync: false
+      region: singapore
+      buildCommand: npm install
+      startCommand: node index.js
+      autoDeployTrigger: commit
+      rootDir: server/
