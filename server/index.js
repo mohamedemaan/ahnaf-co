@@ -20,16 +20,8 @@ const app = express();
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow localhost and any vercel.app URL
-      if (
-        !origin ||
-        origin.includes("localhost") ||
-        origin.includes("vercel.app")
-      ) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
+      // Allow localhost, vercel.app, onrender.com, and custom domains
+      callback(null, true);
     },
     credentials: true,
   })
